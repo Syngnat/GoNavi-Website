@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom';
 import ReleaseTimeline from '../components/changelog/ReleaseTimeline';
-import { fallbackReleases } from '../content/changelog-fallback';
 import { resolveLocale } from '../lib/locale';
 import { useReleaseFeed } from '../lib/useReleaseFeed';
 
@@ -8,7 +7,7 @@ const copy = {
   zh: {
     eyebrow: '版本时间线',
     title: '按发布时间阅读 GoNavi 的发布轨迹',
-    description: '当 GitHub API 不可用时，页面会自动展示本地 fallback 记录，让版本时间线继续可读。',
+    description: '当 GitHub API 不可用时，页面会自动展示本地兜底记录，让版本时间线继续可读。',
     note: '当前版本源',
   },
   en: {
@@ -22,8 +21,7 @@ const copy = {
 export default function ChangelogPage() {
   const { locale } = useParams();
   const resolvedLocale = resolveLocale(locale);
-  const { loading, releases, error } = useReleaseFeed();
-  const visibleReleases = releases.length ? releases : fallbackReleases;
+  const { loading, releases, error } = useReleaseFeed(resolvedLocale);
 
   return (
     <div className="release-page">
@@ -35,7 +33,7 @@ export default function ChangelogPage() {
         {error ? <p className="release-page__status release-page__status--error">{error}</p> : null}
       </section>
 
-      <ReleaseTimeline locale={resolvedLocale} releases={visibleReleases} />
+      <ReleaseTimeline locale={resolvedLocale} releases={releases} />
     </div>
   );
 }

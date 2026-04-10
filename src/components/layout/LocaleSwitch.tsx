@@ -17,13 +17,18 @@ type LocaleSwitchProps = {
   locale: SiteLocale;
 };
 
+const switchLabels = {
+  zh: '语言切换',
+  en: 'Locale switch',
+} as const;
+
 export default function LocaleSwitch({ locale }: LocaleSwitchProps) {
   const location = useLocation();
   const internalPath = stripLocalePrefix(location.pathname);
   const suffix = `${location.search}${location.hash}`;
 
   return (
-    <nav className="locale-switch" aria-label="Locale switch">
+    <nav className="locale-switch" aria-label={switchLabels[locale]}>
       <Link
         aria-current={locale === 'zh' ? 'page' : undefined}
         className="locale-switch__link"

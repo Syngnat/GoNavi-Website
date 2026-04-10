@@ -9,7 +9,7 @@ const roadmapCopy = {
     sections: [
       {
         title: '进行中',
-        items: ['官网首版结构成型', '下载页与更新日志接入 release feed', '文档区双语基础内容'],
+        items: ['官网首版结构成型', '下载页与更新日志接入发布源', '文档区双语基础内容'],
       },
       {
         title: '计划中',
@@ -17,7 +17,7 @@ const roadmapCopy = {
       },
       {
         title: '社区入口',
-        items: ['GitHub Issues', 'Release 反馈', '贡献与赞助入口'],
+        items: ['GitHub 问题反馈', '版本反馈入口', '贡献与赞助入口'],
       },
     ],
   },

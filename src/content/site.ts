@@ -9,6 +9,7 @@ export type HeroContent = {
   eyebrow: string;
   title: string;
   description: string;
+  asideLabel: string;
   asideKicker: string;
   asideDescription: string;
   primaryCta: CtaLink;
@@ -69,10 +70,11 @@ export type HomeContent = {
 export const siteContent: Record<SiteLocale, HomeContent> = {
   zh: {
     hero: {
-      eyebrow: 'GoNavi / Native Database Workflow',
+      eyebrow: 'GoNavi / 原生数据库工作流',
       title: '为多数据库工作流而生的原生桌面工作台',
       description:
         '以轻稳快的桌面体验串起 PostgreSQL、MySQL、SQLite、SQL Server 与 MongoDB 等常见数据源，让开发者和团队都能在同一处完成连接、查询、比对与交付。',
+      asideLabel: '首页亮点',
       asideKicker: '编辑型产品官网',
       asideDescription: '把发布、文档和产品上下文收在同一张深色工作面里，而不是散落在多个彼此脱节的工具页上。',
       primaryCta: {
@@ -93,22 +95,22 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
     },
     features: [
       {
-        tag: 'Native',
+        tag: '原生',
         title: '原生桌面响应',
         description: '以本地应用的稳定性承载高频查询、批量切换和长时间工作流。',
       },
       {
-        tag: 'Multi-DB',
+        tag: '多库',
         title: '多数据库并行',
         description: '把常见数据库放到同一套控制界面里，减少上下文切换成本。',
       },
       {
-        tag: 'Flow',
+        tag: '流程',
         title: '查询到交付一条线',
         description: '历史、收藏、结果比对和复制分享保持连贯，不打断节奏。',
       },
       {
-        tag: 'Team',
+        tag: '协作',
         title: '个人与团队都顺手',
         description: '适合开发者日常排查，也适合协作时统一工作方式与产出格式。',
       },
@@ -121,35 +123,35 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
     },
     screenshots: [
       {
-        badge: 'Workspace',
+        badge: '工作台',
         title: '连接池与标签页同屏',
         description: '把活跃连接、查询历史和收藏视图收拢在一个稳定的工作面板里。',
-        metric: '3 active databases',
+        metric: '3 个活跃数据库',
       },
       {
-        badge: 'Query Lab',
+        badge: '查询实验',
         title: '轻量查询编辑器',
         description: '支持快速试跑、结果预览和复制输出，适合开发者临时排障。',
-        metric: 'Live result grid',
+        metric: '实时结果表格',
       },
       {
-        badge: 'Review',
+        badge: '审阅',
         title: '比对与审阅面板',
         description: '用更清晰的差异视图检查表结构和数据结果，减少沟通来回。',
-        metric: 'Diff-first review',
+        metric: '差异优先审阅',
       },
     ],
     databaseMatrix: {
-      eyebrow: 'Database matrix',
+      eyebrow: '数据库矩阵',
       title: '常见数据库的统一入口',
       description:
         'GoNavi 关注的是跨数据库工作的稳定手感，而不是把复杂性藏起来。连接、编辑、查询和检查在同一套界面里完成。',
       rows: [
-        { name: 'PostgreSQL', status: 'Primary', detail: '适合主业务库、结构浏览和高频查询。' },
-        { name: 'MySQL', status: 'Primary', detail: '覆盖常见应用栈，便于日常调试与维护。' },
-        { name: 'SQLite', status: 'Supported', detail: '适合本地文件库、原型验证和轻量检查。' },
-        { name: 'SQL Server', status: 'Supported', detail: '面向企业系统和既有迁移场景。' },
-        { name: 'MongoDB', status: 'Supported', detail: '适合文档型数据浏览和结果审阅。' },
+        { name: 'PostgreSQL', status: '主力支持', detail: '适合主业务库、结构浏览和高频查询。' },
+        { name: 'MySQL', status: '主力支持', detail: '覆盖常见应用栈，便于日常调试与维护。' },
+        { name: 'SQLite', status: '已支持', detail: '适合本地文件库、原型验证和轻量检查。' },
+        { name: 'SQL Server', status: '已支持', detail: '面向企业系统和既有迁移场景。' },
+        { name: 'MongoDB', status: '已支持', detail: '适合文档型数据浏览和结果审阅。' },
       ],
     },
     actionPanel: {
@@ -166,7 +168,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
         href: 'https://github.com/Syngnat/GoNavi',
       },
       primaryMeta: '桌面版本目录',
-      secondaryMeta: '仓库、Issue 与源码入口',
+      secondaryMeta: '仓库、问题反馈与源码入口',
       note: '面向开发者日常排障，也适合团队统一使用。',
     },
   },
@@ -176,6 +178,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
       title: 'A native desktop workstation for multi-database workflows',
       description:
         'GoNavi brings a light, steady, and fast desktop experience to PostgreSQL, MySQL, SQLite, SQL Server, MongoDB, and more so developers and teams can connect, query, compare, and ship from one place.',
+      asideLabel: 'Homepage highlights',
       asideKicker: 'Editorial product shell',
       asideDescription:
         'Keep releases, docs, and product context on a single dark surface instead of scattering them across disconnected utility pages.',

@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { fallbackReleases } from '../content/changelog-fallback';
+import { fallbackReleases, getFallbackReleases } from '../content/changelog-fallback';
 import { useReleaseFeed } from './useReleaseFeed';
 
-function ReleaseFeedProbe() {
-  const { loading, releases, error } = useReleaseFeed();
+function ReleaseFeedProbe({ locale = 'en' }: { locale?: 'zh' | 'en' }) {
+  const { loading, releases, error } = useReleaseFeed(locale);
 
   return (
     <div>
@@ -31,6 +31,24 @@ test('falls back to local releases when GitHub feed fails', async () => {
   expect(screen.getByTestId('count')).toHaveTextContent(String(fallbackReleases.length));
   expect(screen.getByTestId('first-tag')).toHaveTextContent(fallbackReleases[0]?.tag ?? 'none');
   expect(screen.getByTestId('error')).toHaveTextContent('network down');
+});
+
+test('uses zh fallback copy when GitHub returns no public releases', async () => {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify([{ tag_name: 'draft-build', name: 'Draft build', draft: true, assets: [] }]), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }),
+  );
+
+  render(<ReleaseFeedProbe locale="zh" />);
+
+  await waitFor(() => {
+    expect(screen.getByTestId('loading')).toHaveTextContent('false');
+  });
+
+  expect(screen.getByTestId('count')).toHaveTextContent(String(getFallbackReleases('zh').length));
+  expect(screen.getByTestId('error')).toHaveTextContent('GitHub 当前没有公开发布版本，现展示本地兜底快照。');
 });
 
 test('uses public GitHub releases when the feed succeeds', async () => {

@@ -31,7 +31,7 @@ export default function Hero({ content }: HeroProps) {
 
       </div>
 
-      <aside className="home-hero__aside" aria-label="Homepage highlights">
+      <aside className="home-hero__aside" aria-label={content.asideLabel}>
         <p className="home-hero__aside-kicker">{content.asideKicker}</p>
         <p className="home-hero__aside-copy">{content.asideDescription}</p>
         <ul className="home-hero__highlights">

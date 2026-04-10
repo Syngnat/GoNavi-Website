@@ -15,11 +15,12 @@ test('renders the locale-aware shell on a nested zh route', () => {
     </MemoryRouter>,
   );
 
-  expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/zh');
-  expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute('href', '/zh/download');
-  expect(screen.getByRole('link', { name: 'Docs' })).toHaveAttribute('href', '/zh/docs');
-  expect(screen.getByRole('link', { name: 'Changelog' })).toHaveAttribute('href', '/zh/changelog');
-  expect(screen.getByRole('link', { name: 'Roadmap' })).toHaveAttribute('href', '/zh/roadmap');
+  expect(screen.getByText('原生数据库工作流')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '首页' })).toHaveAttribute('href', '/zh');
+  expect(screen.getByRole('link', { name: '下载' })).toHaveAttribute('href', '/zh/download');
+  expect(screen.getByRole('link', { name: '文档' })).toHaveAttribute('href', '/zh/docs');
+  expect(screen.getByRole('link', { name: '更新日志' })).toHaveAttribute('href', '/zh/changelog');
+  expect(screen.getByRole('link', { name: '路线图' })).toHaveAttribute('href', '/zh/roadmap');
   expect(screen.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
     'href',
     'https://github.com/Syngnat/GoNavi',
@@ -35,6 +36,7 @@ test('renders the locale switch correctly on a nested en route', () => {
     </MemoryRouter>,
   );
 
+  expect(screen.getByText('Native database workflow')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/en');
   expect(screen.getByRole('link', { name: 'ZH' })).toHaveAttribute('href', '/zh/docs/quick-start');
   expect(screen.getByRole('link', { name: 'EN' })).toHaveAttribute('href', '/en/docs/quick-start');
@@ -53,7 +55,7 @@ test('renders the branded homepage hero on the zh homepage', () => {
   expect(
     within(main).getByRole('heading', { name: '为多数据库工作流而生的原生桌面工作台' }),
   ).toBeInTheDocument();
-  expect(within(main).getByText('GoNavi / Native Database Workflow')).toBeInTheDocument();
+  expect(within(main).getByText('GoNavi / 原生数据库工作流')).toBeInTheDocument();
   expect(within(main).getAllByRole('link', { name: '立即下载' })).toHaveLength(2);
   expect(within(main).getAllByRole('link', { name: 'GitHub' })).toHaveLength(2);
   expect(within(main).getAllByRole('link', { name: '立即下载' })[0]).toHaveAttribute('href', '/zh/download');
@@ -67,6 +69,7 @@ test('renders the branded homepage hero on the zh homepage', () => {
   expect(within(main).getByText('下载 / 文档 / 社区')).toBeInTheDocument();
   expect(within(main).getByText('编辑型产品官网')).toBeInTheDocument();
   expect(within(main).getByText('桌面版本目录')).toBeInTheDocument();
+  expect(within(main).getByText('数据库矩阵')).toBeInTheDocument();
 });
 
 test('renders the branded homepage hero on the en homepage', () => {
@@ -131,7 +134,7 @@ test('renders the redesigned zh download and changelog entry pages', () => {
   const main = screen.getByRole('main');
 
   expect(within(main).getByText('发布目录')).toBeInTheDocument();
-  expect(within(main).getByRole('heading', { name: '从当前桌面 release 进入下载目录' })).toBeInTheDocument();
+  expect(within(main).getByRole('heading', { name: '从当前桌面版本进入下载目录' })).toBeInTheDocument();
   expect(within(main).getByText('平台索引')).toBeInTheDocument();
 });
 

@@ -34,11 +34,11 @@ export default function ReleaseSummary({ locale, release, loading, error }: Rele
   const copy = {
     zh: {
       title: '最新发布',
-      loading: '正在刷新 GitHub release feed',
-      fallback: '当前展示本地 fallback 快照',
+      loading: '正在刷新 GitHub 发布源',
+      fallback: '当前展示本地兜底快照',
       publishedAt: '发布时间',
       source: '来源',
-      releaseNotes: '更新要点',
+      releaseNotes: '更新说明',
     },
     en: {
       title: 'Latest release',

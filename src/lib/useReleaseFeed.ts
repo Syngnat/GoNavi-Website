@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fallbackReleases } from '../content/changelog-fallback';
+import { getFallbackReleases } from '../content/changelog-fallback';
+import { SiteLocale } from './locale';
 import { GitHubReleaseLike, NormalizedRelease, normalizeRelease } from './releases';
 
 const RELEASE_FEED_URL = 'https://api.github.com/repos/Syngnat/GoNavi/releases?per_page=20';
@@ -10,15 +11,16 @@ export type ReleaseFeedState = {
   error: string | null;
 };
 
-function getErrorMessage(error: unknown): string {
+function getErrorMessage(error: unknown, locale: SiteLocale): string {
   if (error instanceof Error) {
     return error.message;
   }
 
-  return 'Failed to load release feed.';
+  return locale === 'zh' ? '发布源加载失败。' : 'Failed to load release feed.';
 }
 
-export function useReleaseFeed(): ReleaseFeedState {
+export function useReleaseFeed(locale: SiteLocale): ReleaseFeedState {
+  const fallbackReleases = getFallbackReleases(locale);
   const [state, setState] = useState<ReleaseFeedState>({
     loading: true,
     releases: fallbackReleases,
@@ -37,7 +39,11 @@ export function useReleaseFeed(): ReleaseFeedState {
         });
 
         if (!response.ok) {
-          throw new Error(`GitHub release feed request failed with status ${response.status}.`);
+          throw new Error(
+            locale === 'zh'
+              ? `GitHub 发布源请求失败，状态码 ${response.status}。`
+              : `GitHub release feed request failed with status ${response.status}.`,
+          );
         }
 
         const payload = (await response.json()) as GitHubReleaseLike[];
@@ -53,7 +59,10 @@ export function useReleaseFeed(): ReleaseFeedState {
           setState({
             loading: false,
             releases: fallbackReleases,
-            error: 'GitHub returned no public releases. Showing the local fallback snapshot.',
+            error:
+              locale === 'zh'
+                ? 'GitHub 当前没有公开发布版本，现展示本地兜底快照。'
+                : 'GitHub returned no public releases. Showing the local fallback snapshot.',
           });
           return;
         }
@@ -71,7 +80,7 @@ export function useReleaseFeed(): ReleaseFeedState {
         setState({
           loading: false,
           releases: fallbackReleases,
-          error: getErrorMessage(error),
+          error: getErrorMessage(error, locale),
         });
       }
     }
@@ -82,7 +91,7 @@ export function useReleaseFeed(): ReleaseFeedState {
       active = false;
       controller.abort();
     };
-  }, []);
+  }, [locale]);
 
   return state;
 }

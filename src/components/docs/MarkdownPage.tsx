@@ -25,10 +25,12 @@ function resolveDocHref(locale: SiteLocale, href?: string): string | null {
 }
 
 export default function MarkdownPage({ locale, title, summary, body }: MarkdownPageProps) {
+  const eyebrow = locale === 'zh' ? '文档' : 'Docs';
+
   return (
     <article className="docs-article">
       <header className="docs-article__header">
-        <p className="section-eyebrow">Docs</p>
+        <p className="section-eyebrow">{eyebrow}</p>
         <h1 className="docs-article__title">{title}</h1>
         {summary ? <p className="docs-article__summary">{summary}</p> : null}
       </header>

@@ -10,9 +10,9 @@ const platforms: ReleasePlatform[] = ['windows', 'macos', 'linux'];
 const copy = {
   zh: {
     eyebrow: '发布目录',
-    title: '从当前桌面 release 进入下载目录',
+    title: '从当前桌面版本进入下载目录',
     description:
-      '页面优先读取 GitHub Releases，失败时自动降级到本地 fallback 数据，让桌面下载入口始终保持可读。',
+      '页面优先读取 GitHub Releases，失败时自动降级到本地兜底数据，让桌面下载入口始终保持可读。',
     releaseFeed: '平台索引',
     releaseFeedCopy: '按系统查看当前可用资产、包体大小和更新时间。',
   },
@@ -29,7 +29,7 @@ const copy = {
 export default function DownloadPage() {
   const { locale } = useParams();
   const resolvedLocale = resolveLocale(locale);
-  const { loading, releases, error } = useReleaseFeed();
+  const { loading, releases, error } = useReleaseFeed(resolvedLocale);
   const latest = releases[0];
   const primaryAssets = latest ? pickPrimaryAssets(latest) : {};
 
