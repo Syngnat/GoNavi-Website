@@ -5,6 +5,7 @@
 html {
   min-height: 100%;
   background: var(--bg);
+  scroll-behavior: smooth;
 }
 
 html,
@@ -16,14 +17,13 @@ body,
 body {
   margin: 0;
   font-family: var(--font-sans);
-  line-height: 1.5;
+  line-height: 1.55;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   background:
-    radial-gradient(circle at 12% 8%, rgba(23, 78, 166, 0.12), transparent 28%),
-    radial-gradient(circle at 88% 0%, rgba(88, 199, 180, 0.12), transparent 22%),
-    radial-gradient(circle at 50% 108%, rgba(112, 185, 255, 0.12), transparent 26%),
-    linear-gradient(180deg, #fbf9f4 0%, var(--bg) 100%);
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.05), transparent 24%),
+    radial-gradient(circle at 8% 14%, rgba(138, 228, 207, 0.08), transparent 20%),
+    linear-gradient(180deg, #040507 0%, #090b0f 48%, #050608 100%);
   color: var(--text);
 }
 
@@ -33,18 +33,18 @@ a {
 }
 
 a:hover {
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 a:focus-visible,
 button:focus-visible {
-  outline: 3px solid rgba(23, 78, 166, 0.34);
+  outline: 2px solid rgba(255, 255, 255, 0.42);
   outline-offset: 3px;
 }
 
 ::selection {
-  background: rgba(23, 78, 166, 0.18);
-  color: var(--text);
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--accent-strong);
 }
 
 p,
@@ -55,4 +55,14 @@ h4,
 h5,
 h6 {
   margin-block: 0;
+}
+
+p {
+  max-width: 72ch;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
 }

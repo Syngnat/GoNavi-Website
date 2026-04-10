@@ -9,17 +9,17 @@ export default function DocsIndexPage() {
   const docs = getDocsForLocale(resolvedLocale);
   const copy = {
     zh: {
-      eyebrow: '文档首页',
-      title: '从安装到连接，把 GoNavi 的主路径压缩成一套可复用说明',
+      eyebrow: '文档目录',
+      title: '把安装、连接和排查说明编排成一条连续阅读路径',
       description:
-        '首版文档优先覆盖安装、连接、数据源和常见问题，帮助个人开发者与团队快速统一工作方式。',
+        '首版文档优先覆盖安装、连接、数据源和常见问题，让个人开发者与团队在同一套说明里建立稳定工作节奏。',
       action: '阅读文档',
     },
     en: {
-      eyebrow: 'Docs Home',
-      title: 'Compress the path from install to connection into a reusable operating guide',
+      eyebrow: 'Docs directory',
+      title: 'Sequence installation, connection, and debugging guidance into a continuous reading path',
       description:
-        'The first docs release focuses on installation, connectivity, data sources, and FAQ for both solo developers and teams.',
+        'The first docs release focuses on installation, connectivity, data sources, and FAQ so solo developers and teams can align on one reading flow.',
       action: 'Open article',
     },
   }[resolvedLocale];

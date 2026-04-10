@@ -6,7 +6,7 @@ type DatabaseMatrixProps = {
 
 export default function DatabaseMatrix({ content }: DatabaseMatrixProps) {
   return (
-    <section className="home-section" aria-labelledby="database-matrix-title">
+    <section className="home-section home-section--split" aria-labelledby="database-matrix-title">
       <div className="home-section__heading">
         <p className="section-eyebrow">{content.eyebrow}</p>
         <h2 className="section-title" id="database-matrix-title">

@@ -19,13 +19,11 @@ export default function Header({ locale }: HeaderProps) {
     <header className="site-header">
       <div className="site-shell__inner site-header__inner">
         <div className="site-brand">
-          <span className="site-brand__mark" aria-hidden="true">
-            P
+          <span className="site-brand__index" aria-hidden="true">
+            [01]
           </span>
-          <div className="site-brand__copy">
-            <span className="site-brand__name">Prism Control</span>
-            <span className="site-brand__tag">GoNavi official website</span>
-          </div>
+          <span className="site-brand__name">GoNavi</span>
+          <span className="site-brand__tag">Native database workflow</span>
         </div>
 
         <div className="site-header__meta">

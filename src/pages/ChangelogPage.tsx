@@ -6,16 +6,16 @@ import { useReleaseFeed } from '../lib/useReleaseFeed';
 
 const copy = {
   zh: {
-    eyebrow: '更新日志',
-    title: '按 release 顺序查看更新轨迹',
-    description: '当 GitHub API 不可用时，页面会自动展示本地 fallback 记录，不会留白。',
-    note: '当前 feed',
+    eyebrow: '版本时间线',
+    title: '按发布时间阅读 GoNavi 的发布轨迹',
+    description: '当 GitHub API 不可用时，页面会自动展示本地 fallback 记录，让版本时间线继续可读。',
+    note: '当前版本源',
   },
   en: {
-    eyebrow: 'Changelog',
-    title: 'Track changes in release order',
-    description: 'When the GitHub API is unavailable, the page switches to the local fallback snapshot instead of going blank.',
-    note: 'Current feed',
+    eyebrow: 'Release timeline',
+    title: 'Read the GoNavi release trail in publication order',
+    description: 'When the GitHub API is unavailable, the page switches to the local fallback snapshot so the release timeline never goes blank.',
+    note: 'Current source',
   },
 } as const;
 

@@ -13,7 +13,7 @@ export default function HomePage() {
   const content = getSiteContent(resolvedLocale);
 
   return (
-    <div className="home-page">
+    <div className="home-page home-page--editorial">
       <Hero content={content.hero} />
       <FeatureRail heading={content.featureRail} features={content.features} />
       <ScreenshotWall heading={content.screenshotWall} screenshots={content.screenshots} />

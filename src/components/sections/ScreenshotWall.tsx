@@ -7,7 +7,7 @@ type ScreenshotWallProps = {
 
 export default function ScreenshotWall({ heading, screenshots }: ScreenshotWallProps) {
   return (
-    <section className="home-section" aria-labelledby="screenshot-wall-title">
+    <section className="home-section home-section--split" aria-labelledby="screenshot-wall-title">
       <div className="home-section__heading">
         <p className="section-eyebrow">{heading.eyebrow}</p>
         <h2 className="section-title" id="screenshot-wall-title">
@@ -19,46 +19,30 @@ export default function ScreenshotWall({ heading, screenshots }: ScreenshotWallP
       <div className="screenshot-wall">
         {screenshots.map((shot, index) => (
           <article key={shot.title} className={`screenshot-card screenshot-card--${index + 1}`}>
-            <div className="screenshot-card__chrome" aria-hidden="true">
-              <span className="screenshot-card__dot" />
-              <span className="screenshot-card__dot" />
-              <span className="screenshot-card__dot" />
+            <div className="screenshot-card__meta">
+              <p className="screenshot-card__metric">{shot.metric}</p>
               <span className="screenshot-card__label">{shot.badge}</span>
             </div>
 
-            <div className="screenshot-card__body">
-              <div className="screenshot-card__surface">
-                <div className="screenshot-card__surface-header">
-                  <div>
-                    <p className="screenshot-card__metric">{shot.metric}</p>
-                    <h3 className="screenshot-card__title">{shot.title}</h3>
-                  </div>
-                  <span className="screenshot-card__chip">{shot.badge}</span>
+            <div className="screenshot-card__surface" aria-hidden="true">
+              <div className="screenshot-card__surface-bar" />
+              <div className="screenshot-card__surface-grid">
+                <div className="screenshot-card__surface-main">
+                  <span className="screenshot-card__surface-line screenshot-card__surface-line--wide" />
+                  <span className="screenshot-card__surface-line" />
+                  <span className="screenshot-card__surface-line screenshot-card__surface-line--accent" />
                 </div>
-
-                <div className="screenshot-card__grid" aria-hidden="true">
-                  <div className="screenshot-card__grid-main">
-                    <div className="screenshot-card__toolbar">
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                    <div className="screenshot-card__editor">
-                      <div className="screenshot-card__line screenshot-card__line--wide" />
-                      <div className="screenshot-card__line" />
-                      <div className="screenshot-card__line screenshot-card__line--accent" />
-                      <div className="screenshot-card__line" />
-                    </div>
-                  </div>
-                  <div className="screenshot-card__grid-aside">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
+                <div className="screenshot-card__surface-side">
+                  <span />
+                  <span />
+                  <span />
                 </div>
-
-                <p className="screenshot-card__description">{shot.description}</p>
               </div>
+            </div>
+
+            <div className="screenshot-card__copy">
+              <h3 className="screenshot-card__title">{shot.title}</h3>
+              <p className="screenshot-card__description">{shot.description}</p>
             </div>
           </article>
         ))}

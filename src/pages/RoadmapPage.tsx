@@ -7,15 +7,15 @@ export default function RoadmapPage() {
   const resolvedLocale = resolveLocale(locale);
   const copy = {
     zh: {
-      eyebrow: '路线图',
-      title: '把官网、产品演进与社区入口放到同一页里',
-      description: '这里不只是功能待办列表，也是官网、客户端与社区协同方式的公开说明。',
+      eyebrow: '公开路线图',
+      title: '把产品方向、站点演进与社区协作放在同一份公开计划里',
+      description: '这里不只是功能待办列表，也是官网、客户端与社区协同方式的公开计划书。',
     },
     en: {
-      eyebrow: 'Roadmap',
-      title: 'Put the website, product direction, and community entry points in one place',
+      eyebrow: 'Public roadmap',
+      title: 'Put product direction, site evolution, and community collaboration into one public plan',
       description:
-        'This page is not only a feature list. It also explains how the website, product, and community move together.',
+        'This page is not only a feature list. It also acts as a public plan for how the website, product, and community move together.',
     },
   }[resolvedLocale];
 
