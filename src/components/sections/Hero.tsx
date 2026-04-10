@@ -8,7 +8,7 @@ type HeroProps = {
 export default function Hero({ content }: HeroProps) {
   return (
     <section className="home-hero" aria-labelledby="home-hero-title">
-      <div className="home-hero__panel">
+      <div className="home-hero__lead">
         <p className="section-eyebrow">{content.eyebrow}</p>
         <h1 className="home-hero__title" id="home-hero-title">
           {content.title}
@@ -29,14 +29,19 @@ export default function Hero({ content }: HeroProps) {
           </a>
         </div>
 
-        <ul className="home-hero__highlights" aria-label="Homepage highlights">
+      </div>
+
+      <aside className="home-hero__aside" aria-label="Homepage highlights">
+        <p className="home-hero__aside-kicker">{content.asideKicker}</p>
+        <p className="home-hero__aside-copy">{content.asideDescription}</p>
+        <ul className="home-hero__highlights">
           {content.highlights.map((highlight) => (
             <li key={highlight} className="home-hero__highlight">
               {highlight}
             </li>
           ))}
         </ul>
-      </div>
+      </aside>
     </section>
   );
 }

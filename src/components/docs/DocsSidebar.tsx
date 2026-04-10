@@ -11,13 +11,13 @@ type DocsSidebarProps = {
 export default function DocsSidebar({ locale, docs, activeSlug }: DocsSidebarProps) {
   const copy = {
     zh: {
-      eyebrow: '文档导航',
-      title: '围绕连接、数据源和排查建立稳定工作流',
+      eyebrow: '文档目录',
+      title: '围绕连接、数据源和排查建立连续阅读路径',
       index: '文档首页',
     },
     en: {
-      eyebrow: 'Docs navigation',
-      title: 'Build a stable workflow around connectivity, data sources, and debugging',
+      eyebrow: 'Docs directory',
+      title: 'Build a continuous reading path around connectivity, data sources, and debugging',
       index: 'Docs home',
     },
   }[locale];

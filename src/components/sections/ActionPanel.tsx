@@ -17,17 +17,24 @@ export default function ActionPanel({ content }: ActionPanelProps) {
         <p className="home-action__note">{content.note}</p>
       </div>
 
-      <div className="home-action__cta-row">
-        <Link className="home-cta home-cta--primary" to={content.primaryCta.href}>
-          {content.primaryCta.label}
+      <div className="home-action__rail">
+        <Link aria-label={content.primaryCta.label} className="home-action__link" to={content.primaryCta.href}>
+          <span className="home-action__link-label">{content.primaryCta.label}</span>
+          <span aria-hidden="true" className="home-action__link-meta">
+            {content.primaryMeta}
+          </span>
         </Link>
         <a
-          className="home-cta home-cta--secondary"
+          aria-label={content.secondaryCta.label}
+          className="home-action__link"
           href={content.secondaryCta.href}
           rel="noreferrer"
           target="_blank"
         >
-          {content.secondaryCta.label}
+          <span className="home-action__link-label">{content.secondaryCta.label}</span>
+          <span aria-hidden="true" className="home-action__link-meta">
+            {content.secondaryMeta}
+          </span>
         </a>
       </div>
     </section>

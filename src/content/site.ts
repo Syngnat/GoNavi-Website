@@ -9,6 +9,8 @@ export type HeroContent = {
   eyebrow: string;
   title: string;
   description: string;
+  asideKicker: string;
+  asideDescription: string;
   primaryCta: CtaLink;
   secondaryCta: CtaLink;
   highlights: string[];
@@ -49,6 +51,8 @@ export type ActionPanelContent = {
   description: string;
   primaryCta: CtaLink;
   secondaryCta: CtaLink;
+  primaryMeta: string;
+  secondaryMeta: string;
   note: string;
 };
 
@@ -65,10 +69,12 @@ export type HomeContent = {
 export const siteContent: Record<SiteLocale, HomeContent> = {
   zh: {
     hero: {
-      eyebrow: 'Prism Control / GoNavi Desktop',
+      eyebrow: 'GoNavi / Native Database Workflow',
       title: '为多数据库工作流而生的原生桌面工作台',
       description:
         '以轻稳快的桌面体验串起 PostgreSQL、MySQL、SQLite、SQL Server 与 MongoDB 等常见数据源，让开发者和团队都能在同一处完成连接、查询、比对与交付。',
+      asideKicker: '编辑型产品官网',
+      asideDescription: '把发布、文档和产品上下文收在同一张深色工作面里，而不是散落在多个彼此脱节的工具页上。',
       primaryCta: {
         label: '立即下载',
         href: '/zh/download',
@@ -80,7 +86,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
       highlights: ['原生桌面', '多数据库', '轻稳快', '开发者与团队兼顾'],
     },
     featureRail: {
-      eyebrow: '能力序列',
+      eyebrow: '工作流主叙事',
       title: '把高频数据库工作放到同一条直线里',
       description:
         'GoNavi 强调稳定、连贯和低摩擦，不把工作流切碎成太多页面，而是让开发者在单一控制面里完成常见任务。',
@@ -108,7 +114,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
       },
     ],
     screenshotWall: {
-      eyebrow: '界面片段',
+      eyebrow: '产品切面',
       title: '把产品状态做成可感知的面板',
       description:
         '抽象化的界面片段保留产品感，不依赖真实截图也能表达连接、查询和审阅三类核心场景。',
@@ -147,7 +153,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
       ],
     },
     actionPanel: {
-      eyebrow: '行动入口',
+      eyebrow: '下载 / 文档 / 社区',
       title: '把数据库工作压缩成更短的路径',
       description:
         '下载桌面端开始试用，或者直接查看仓库了解实现细节。首页只做入口，不承诺下载/文档页之外的额外流程。',
@@ -159,15 +165,20 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
         label: 'GitHub',
         href: 'https://github.com/Syngnat/GoNavi',
       },
+      primaryMeta: '桌面版本目录',
+      secondaryMeta: '仓库、Issue 与源码入口',
       note: '面向开发者日常排障，也适合团队统一使用。',
     },
   },
   en: {
     hero: {
-      eyebrow: 'Prism Control / GoNavi Desktop',
+      eyebrow: 'GoNavi / Native Database Workflow',
       title: 'A native desktop workstation for multi-database workflows',
       description:
         'GoNavi brings a light, steady, and fast desktop experience to PostgreSQL, MySQL, SQLite, SQL Server, MongoDB, and more so developers and teams can connect, query, compare, and ship from one place.',
+      asideKicker: 'Editorial product shell',
+      asideDescription:
+        'Keep releases, docs, and product context on a single dark surface instead of scattering them across disconnected utility pages.',
       primaryCta: {
         label: 'Download',
         href: '/en/download',
@@ -179,7 +190,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
       highlights: ['Native desktop', 'Multi-database', 'Light, steady, fast', 'Built for developers and teams'],
     },
     featureRail: {
-      eyebrow: 'Feature rail',
+      eyebrow: 'Workflow narrative',
       title: 'Put high-frequency database work on one clean line',
       description:
         'GoNavi keeps the workflow stable and low-friction so developers can handle common tasks from a single control surface instead of bouncing between pages.',
@@ -207,7 +218,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
       },
     ],
     screenshotWall: {
-      eyebrow: 'Screenshot wall',
+      eyebrow: 'Product slices',
       title: 'Make product state tangible through panels',
       description:
         'The abstracted UI fragments keep the product feel without relying on real screenshots, while still expressing connect, query, and review flows.',
@@ -246,7 +257,7 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
       ],
     },
     actionPanel: {
-      eyebrow: 'Action panel',
+      eyebrow: 'Download / Docs / Community',
       title: 'Compress database work into a shorter path',
       description:
         'Download the desktop app to try it, or open the repository to inspect the implementation. The homepage stays focused on entry points only.',
@@ -258,6 +269,8 @@ export const siteContent: Record<SiteLocale, HomeContent> = {
         label: 'GitHub',
         href: 'https://github.com/Syngnat/GoNavi',
       },
+      primaryMeta: 'Desktop release directory',
+      secondaryMeta: 'Repository, issues, and source',
       note: 'Built for daily developer debugging and team-wide consistency.',
     },
   },

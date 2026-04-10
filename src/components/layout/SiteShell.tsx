@@ -16,7 +16,7 @@ export default function SiteShell({ locale }: SiteShellProps) {
           <Outlet />
         </div>
       </main>
-      <Footer />
+      <Footer locale={locale} />
     </div>
   );
 }
