@@ -38,7 +38,6 @@ const copy = {
     <div class="docs-layout">
       <aside class="docs-sidebar">
         <p class="docs-sidebar__title">{copy.sidebarTitle}</p>
-        <DocsSearch locale={locale} variant="sidebar" />
         <nav class="docs-sidebar__nav">
           {all.map((d) => (
             <a
@@ -56,8 +55,13 @@ const copy = {
 
       <article class="docs-article">
         <header class="docs-article__header">
-          <h1 class="docs-article__title">{doc.data.title}</h1>
-          {doc.data.summary && <p class="docs-article__summary">{doc.data.summary}</p>}
+          <div class="docs-article__heading">
+            <div class="docs-article__heading-copy">
+              <h1 class="docs-article__title">{doc.data.title}</h1>
+              {doc.data.summary && <p class="docs-article__summary">{doc.data.summary}</p>}
+            </div>
+            <DocsSearch locale={locale} variant="toolbar" />
+          </div>
         </header>
         <div class="docs-article__body">
           <Content />

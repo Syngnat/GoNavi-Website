@@ -3,16 +3,18 @@ import type { Locale } from '../lib/i18n';
 
 interface Props {
   locale: Locale;
-  variant?: 'standalone' | 'sidebar';
+  variant?: 'hero' | 'toolbar';
 }
 
-const { locale, variant = 'standalone' } = Astro.props;
+const { locale, variant = 'hero' } = Astro.props;
 const isZh = locale === 'zh';
 const inputId = `docs-search-${variant}-${locale}`;
 const resultsId = `${inputId}-results`;
 const copy = {
   label: isZh ? '搜索文档' : 'Search docs',
-  placeholder: isZh ? '搜索标题、配置项或正文…' : 'Search titles, settings, or full text…',
+  placeholder: variant === 'toolbar'
+    ? (isZh ? '搜索文档…' : 'Search docs…')
+    : (isZh ? '搜索标题、配置项或正文…' : 'Search titles, settings, or full text…'),
   loading: isZh ? '正在加载文档索引…' : 'Loading documentation index…',
   empty: isZh ? '没有找到相关文档' : 'No matching documentation found',
   count: isZh ? '条结果' : 'results',
@@ -46,7 +48,6 @@ const copy = {
       aria-expanded="false"
       aria-controls={resultsId}
     />
-    <kbd class="docs-search__shortcut" aria-hidden="true">/</kbd>
   </div>
   <div class="docs-search__results" hidden>
     <p class="docs-search__status" role="status" aria-live="polite"></p>
@@ -273,8 +274,9 @@ const copy = {
     document.addEventListener('keydown', (event) => {
       const target = event.target as HTMLElement | null;
       const isEditable = target?.matches('input, textarea, select, [contenteditable="true"]');
-      const isShortcut = (event.key === '/' && !isEditable)
-        || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k');
+      const isShortcut = !isEditable
+        && (event.ctrlKey || event.metaKey)
+        && event.key.toLowerCase() === 'k';
       if (!isShortcut) return;
       event.preventDefault();
       input.focus();

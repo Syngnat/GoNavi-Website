@@ -32,13 +32,14 @@ const copy = {
 ---
 <BaseLayout locale={locale} title={copy.title} description={copy.description} current="/docs">
   <div class="site-shell__inner page-wrap">
-    <section class="content-panel">
-      <p class="content-panel__eyebrow">{copy.eyebrow}</p>
-      <h1 class="content-panel__title">{copy.title}</h1>
-      <p class="content-panel__copy">{copy.description}</p>
+    <section class="content-panel content-panel--docs">
+      <div class="content-panel__main">
+        <p class="content-panel__eyebrow">{copy.eyebrow}</p>
+        <h1 class="content-panel__title">{copy.title}</h1>
+        <p class="content-panel__copy">{copy.description}</p>
+      </div>
+      <DocsSearch locale={locale} variant="hero" />
     </section>
-
-    <DocsSearch locale={locale} variant="standalone" />
 
     <div class="docs-index__grid docs-index__grid--standalone">
       {docs.map((doc, i) => (
