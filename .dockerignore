@@ -16,9 +16,7 @@ dist/
 .ace-tool/
 .idea
 .idea/
-*.md
 Dockerfile
-docker-compose.yml
 .dockerignore
 nginx.conf
 src.vite-bak
