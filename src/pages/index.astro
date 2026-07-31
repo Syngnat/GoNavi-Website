@@ -4,12 +4,22 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <!-- 兜底：no-JS 或检测失败时跳中文站 -->
   <meta http-equiv="refresh" content="0; url=/zh/" />
   <link rel="canonical" href="/zh/" />
   <title>GoNavi</title>
 </head>
 <body>
-  <p>Redirecting to <a href="/zh/">/zh/</a>…</p>
-  <script>location.replace('/zh/');</script>
+  <p>Redirecting…</p>
+  <script is:inline>
+    (function () {
+      const langs = navigator.languages && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language || ''];
+      // 首选语言以 zh 开头（zh-CN/zh-TW/zh-HK 等）则进中文站，其余进英文站
+      const isZh = /^zh\b/i.test(langs[0] || '');
+      location.replace(isZh ? '/zh/' : '/en/');
+    })();
+  </script>
 </body>
 </html>
