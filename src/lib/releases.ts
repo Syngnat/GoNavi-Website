@@ -1,15 +1,16 @@
-export type ReleasePlatform = 'windows' | 'macos' | 'linux';
+import { GITHUB_RELEASES_API } from './i18n';
 
+export type ReleasePlatform = 'windows' | 'macos' | 'linux';
 export type ReleaseAssetPlatform = ReleasePlatform | 'other';
 
-export type GitHubReleaseAssetLike = {
+export interface ReleaseAssetLike {
   name?: string;
   browser_download_url?: string;
   size?: number;
   updated_at?: string;
-};
+}
 
-export type GitHubReleaseLike = {
+export interface ReleaseLike {
   id?: number;
   tag_name?: string;
   name?: string;
@@ -18,18 +19,18 @@ export type GitHubReleaseLike = {
   draft?: boolean;
   prerelease?: boolean;
   published_at?: string;
-  assets?: GitHubReleaseAssetLike[];
-};
+  assets?: ReleaseAssetLike[];
+}
 
-export type NormalizedReleaseAsset = {
+export interface NormalizedReleaseAsset {
   name: string;
   url: string;
   size: number | null;
   updatedAt: string | null;
   platform: ReleaseAssetPlatform;
-};
+}
 
-export type NormalizedRelease = {
+export interface NormalizedRelease {
   id: number | null;
   tag: string;
   name: string;
@@ -39,95 +40,67 @@ export type NormalizedRelease = {
   draft: boolean;
   prerelease: boolean;
   assets: NormalizedReleaseAsset[];
-  primaryAssets: Partial<Record<ReleasePlatform, NormalizedReleaseAsset>>;
-};
+}
 
-const PLATFORM_RULES: Array<{
-  platform: ReleasePlatform;
-  patterns: RegExp[];
-}> = [
-  {
-    platform: 'windows',
-    patterns: [/windows?/i, /win32/i, /win64/i, /\.msi$/i, /\.exe$/i],
-  },
-  {
-    platform: 'macos',
-    patterns: [/mac(os)?/i, /darwin/i, /osx/i, /\.dmg$/i, /\.pkg$/i],
-  },
-  {
-    platform: 'linux',
-    patterns: [/linux/i, /appimage/i, /\.deb$/i, /\.rpm$/i, /\.tar\.gz$/i, /\.tgz$/i],
-  },
+const PLATFORM_RULES: Array<{ platform: ReleasePlatform; patterns: RegExp[] }> = [
+  { platform: 'windows', patterns: [/windows?/i, /win32/i, /win64/i, /\.msi$/i, /\.exe$/i] },
+  { platform: 'macos', patterns: [/mac(os)?/i, /darwin/i, /osx/i, /\.dmg$/i, /\.pkg$/i] },
+  { platform: 'linux', patterns: [/linux/i, /appimage/i, /\.deb$/i, /\.rpm$/i, /\.tar\.gz$/i, /\.tgz$/i] },
 ];
+
+const SKIP_PATTERNS = /checksum|sha256|sha512|signature|\.sig$|\.asc$|readme|source/i;
 
 function toText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function isAssetCandidate(name: string): boolean {
-  return !/checksum|sha256|sha512|signature|\.sig$|\.asc$|readme|source/i.test(name);
-}
-
 function classifyAsset(name: string): ReleaseAssetPlatform {
   for (const rule of PLATFORM_RULES) {
-    if (rule.patterns.some((pattern) => pattern.test(name))) {
-      return rule.platform;
-    }
+    if (rule.patterns.some((p) => p.test(name))) return rule.platform;
   }
-
   return 'other';
 }
 
-function scoreAsset(platform: ReleasePlatform, asset: NormalizedReleaseAsset): number {
-  const lowerName = asset.name.toLowerCase();
+export function scoreAsset(platform: ReleasePlatform, asset: NormalizedReleaseAsset): number {
+  const lower = asset.name.toLowerCase();
   let score = 0;
-
-  switch (platform) {
-    case 'windows':
-      if (/(windows?|win32|win64)/i.test(lowerName)) score += 6;
-      if (/\.exe$/i.test(lowerName) || /\.msi$/i.test(lowerName)) score += 4;
-      if (/portable|installer/i.test(lowerName)) score += 2;
-      break;
-    case 'macos':
-      if (/(mac(os)?|darwin|osx)/i.test(lowerName)) score += 6;
-      if (/\.dmg$/i.test(lowerName) || /\.pkg$/i.test(lowerName)) score += 4;
-      if (/universal|arm64|aarch64|x64/i.test(lowerName)) score += 1;
-      break;
-    case 'linux':
-      if (/linux/i.test(lowerName)) score += 6;
-      if (/appimage|\.deb$|\.rpm$|\.tar\.gz$|\.tgz$/i.test(lowerName)) score += 4;
-      if (/x64|amd64|arm64|aarch64/i.test(lowerName)) score += 1;
-      break;
+  if (platform === 'windows') {
+    if (/windows?|win32|win64/.test(lower)) score += 6;
+    if (/\.(exe|msi)$/.test(lower)) score += 4;
+    if (/installer|portable/.test(lower)) score += 2;
+  } else if (platform === 'macos') {
+    if (/mac(os)?|darwin|osx/.test(lower)) score += 6;
+    if (/\.(dmg|pkg)$/.test(lower)) score += 4;
+    if (/universal|arm64|x64/.test(lower)) score += 1;
+  } else if (platform === 'linux') {
+    if (/linux/.test(lower)) score += 6;
+    if (/appimage|\.(deb|rpm|tar\.gz|tgz)$/.test(lower)) score += 4;
+    if (/x64|amd64|arm64|aarch64/.test(lower)) score += 1;
   }
-
   return score;
 }
 
-export function normalizeRelease(input: GitHubReleaseLike): NormalizedRelease {
+export function normalizeRelease(input: ReleaseLike): NormalizedRelease {
   const tag = toText(input.tag_name) || toText(input.name) || 'untagged';
   const name = toText(input.name) || tag;
-  const assets = Array.isArray(input.assets)
+  const assets: NormalizedReleaseAsset[] = Array.isArray(input.assets)
     ? input.assets
-        .map((asset) => {
-          const name = toText(asset.name);
-          const url = toText(asset.browser_download_url);
-
-          if (!name || !url || !isAssetCandidate(name)) {
-            return null;
-          }
-
+        .map((a) => {
+          const assetName = toText(a.name);
+          const url = toText(a.browser_download_url);
+          if (!assetName || !url || SKIP_PATTERNS.test(assetName)) return null;
           return {
-            name,
+            name: assetName,
             url,
-            size: typeof asset.size === 'number' && Number.isFinite(asset.size) ? asset.size : null,
-            updatedAt: toText(asset.updated_at) || null,
-            platform: classifyAsset(name),
-          } satisfies NormalizedReleaseAsset;
+            size: typeof a.size === 'number' && Number.isFinite(a.size) ? a.size : null,
+            updatedAt: toText(a.updated_at) || null,
+            platform: classifyAsset(assetName),
+          };
         })
-        .filter((asset): asset is NormalizedReleaseAsset => asset !== null)
+        .filter((a): a is NormalizedReleaseAsset => a !== null)
     : [];
 
-  const release: NormalizedRelease = {
+  return {
     id: typeof input.id === 'number' ? input.id : null,
     tag,
     name,
@@ -137,30 +110,140 @@ export function normalizeRelease(input: GitHubReleaseLike): NormalizedRelease {
     draft: Boolean(input.draft),
     prerelease: Boolean(input.prerelease),
     assets,
-    primaryAssets: {},
   };
-
-  release.primaryAssets = pickPrimaryAssets(release);
-
-  return release;
 }
 
-export function pickPrimaryAssets(
-  input: NormalizedRelease | { assets: NormalizedReleaseAsset[] } | NormalizedReleaseAsset[],
-): Partial<Record<ReleasePlatform, NormalizedReleaseAsset>> {
-  const assets = Array.isArray(input) ? input : input.assets;
-  const primaryAssets: Partial<Record<ReleasePlatform, NormalizedReleaseAsset>> = {};
+/** Pick the best variant per platform given an optional preferred architecture. */
+export function pickPrimaryAsset(
+  assets: NormalizedReleaseAsset[],
+  platform: ReleasePlatform,
+  preferredArch?: 'x64' | 'arm64' | null,
+): NormalizedReleaseAsset | null {
+  const candidates = assets.filter((a) => a.platform === platform);
+  if (candidates.length === 0) return null;
+  const sorted = candidates
+    .slice()
+    .sort((l, r) => scoreAsset(platform, r) - scoreAsset(platform, l) || l.name.localeCompare(r.name));
+  if (preferredArch) {
+    const match = sorted.find((a) => detectArch(a.name) === preferredArch);
+    if (match) return match;
+  }
+  return sorted[0];
+}
 
-  for (const platform of ['windows', 'macos', 'linux'] as ReleasePlatform[]) {
-    const candidates = assets.filter((asset) => asset.platform === platform);
-    if (candidates.length === 0) {
-      continue;
+export function detectArch(name: string): 'x64' | 'arm64' | 'x86' | 'universal' | null {
+  if (/arm64|aarch64/i.test(name)) return 'arm64';
+  if (/x64|amd64|x86_64/i.test(name)) return 'x64';
+  if (/386|i386|x86(?!_64)/i.test(name)) return 'x86';
+  if (/universal/i.test(name)) return 'universal';
+  return null;
+}
+
+export function detectFormat(name: string): string | null {
+  if (/\.msi$/i.test(name)) return 'MSI';
+  if (/\.exe$/i.test(name)) return 'EXE';
+  if (/\.dmg$/i.test(name)) return 'DMG';
+  if (/\.pkg$/i.test(name)) return 'PKG';
+  if (/\.deb$/i.test(name)) return '.deb';
+  if (/\.rpm$/i.test(name)) return '.rpm';
+  if (/\.appimage$/i.test(name)) return 'AppImage';
+  if (/\.tar\.gz$/i.test(name) || /\.tgz$/i.test(name)) return '.tar.gz';
+  if (/\.zip$/i.test(name)) return '.zip';
+  return null;
+}
+
+export function formatSize(size: number | null): string {
+  if (size === null) return '';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let v = size;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i += 1;
+  }
+  const r = v >= 10 || i === 0 ? Math.round(v) : Math.round(v * 10) / 10;
+  return `${r} ${units[i]}`;
+}
+
+/** Called from Astro pages at build time. */
+export async function fetchReleases(perPage = 20): Promise<NormalizedRelease[]> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const res = await fetch(`${GITHUB_RELEASES_API}?per_page=${perPage}`, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'GoNavi-Website/build',
+      },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`GitHub releases fetch failed: HTTP ${res.status}`);
+    const data = (await res.json()) as ReleaseLike[];
+    return Array.isArray(data)
+      ? data.map(normalizeRelease).filter((r) => !r.draft)
+      : [];
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+/** Convenience: latest non-prerelease release. */
+export function latestRelease(releases: NormalizedRelease[]): NormalizedRelease | null {
+  return releases.find((r) => !r.prerelease) ?? releases[0] ?? null;
+}
+
+export interface GitHubStats {
+  stars: number;
+  totalDownloads: number;
+}
+
+/** Fetch GitHub star count and total release download count at build time. */
+let cachedStats: GitHubStats | null = null;
+
+export async function fetchGitHubStats(): Promise<GitHubStats> {
+  if (cachedStats) return cachedStats;
+
+  let stars = 0;
+  let totalDownloads = 0;
+
+  try {
+    const { execSync } = await import('child_process');
+    const token = execSync('gh auth token', { encoding: 'utf-8', timeout: 5_000 }).trim();
+    if (token) {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'GoNavi-Website/build',
+      };
+
+      const repoRes = await fetch('https://api.github.com/repos/Syngnat/GoNavi', {
+        headers,
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (repoRes.ok) {
+        const data = await repoRes.json() as { stargazers_count?: number };
+        stars = data.stargazers_count ?? 0;
+      }
+
+      const releasesRes = await fetch(
+        'https://api.github.com/repos/Syngnat/GoNavi/releases?per_page=100',
+        { headers, signal: AbortSignal.timeout(15_000) },
+      );
+      if (releasesRes.ok) {
+        const releasesData = await releasesRes.json() as Array<{ assets?: Array<{ download_count?: number }> }>;
+        for (const release of releasesData) {
+          if (release.assets) {
+            for (const asset of release.assets) {
+              totalDownloads += asset.download_count ?? 0;
+            }
+          }
+        }
+      }
     }
-
-    primaryAssets[platform] = candidates
-      .slice()
-      .sort((left, right) => scoreAsset(platform, right) - scoreAsset(platform, left) || left.name.localeCompare(right.name))[0];
+  } catch {
+    // gh CLI or API unavailable during build, fall back to 0
   }
 
-  return primaryAssets;
+  cachedStats = { stars, totalDownloads };
+  return cachedStats;
 }

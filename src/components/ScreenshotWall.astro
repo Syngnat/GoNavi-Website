@@ -1,0 +1,39 @@
+---
+interface Shot {
+  badge: string;
+  title: string;
+  description: string;
+  image: string;
+}
+
+interface Props {
+  heading: { eyebrow: string; title: string; description: string };
+  screenshots: Shot[];
+}
+
+const { heading, screenshots } = Astro.props;
+---
+<section class="home-section-wrap">
+  <div class="site-shell__inner">
+    <div class="section-header">
+      <p class="section-eyebrow">{heading.eyebrow}</p>
+      <h2 class="section-title">{heading.title}</h2>
+      <p class="section-desc">{heading.description}</p>
+    </div>
+
+    <div class="showcase-grid">
+      {screenshots.map((s, i) => (
+        <article class="showcase-card">
+          <div class="showcase-card__preview showcase-card__preview--image">
+            <img src={s.image} alt={s.title} loading={i === 0 ? 'eager' : 'lazy'} />
+          </div>
+          <div class="showcase-card__body">
+            <span class="showcase-card__badge">{s.badge}</span>
+            <h3 class="showcase-card__title">{s.title}</h3>
+            <p class="showcase-card__desc">{s.description}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

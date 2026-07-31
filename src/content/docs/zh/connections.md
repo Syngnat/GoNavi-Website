@@ -1,3 +1,11 @@
+---
+title: 连接配置
+summary: 管理、编辑与分享你的数据库连接
+order: 3
+locale: zh
+slug: connections
+---
+
 # 连接配置
 
 GoNavi 将常见连接能力收敛到同一工作流里，减少不同数据库之间的心智切换。

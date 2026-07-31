@@ -1,3 +1,11 @@
+---
+title: Quick Start
+summary: The shortest path from download to your first query
+order: 2
+locale: en
+slug: quick-start
+---
+
 # Quick Start
 
 1. Download the right package for your platform and launch GoNavi.
@@ -12,5 +20,5 @@
 
 ## Next Steps
 
-- Review [Install & Updates](./install.md) for platform-specific notes.
-- Review [Connection Setup](./connections.md) for URI, SSH, and proxy workflows.
+- Review [Install & Updates](/en/docs/install) for platform-specific notes.
+- Review [Connection Setup](/en/docs/connections) for URI, SSH, and proxy workflows.

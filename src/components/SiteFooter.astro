@@ -1,0 +1,78 @@
+---
+import { footerCopy, GITHUB_URL, GITHUB_ISSUES_URL, GITHUB_DISCUSSIONS_URL, withLocale } from '../lib/i18n';
+import type { Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = footerCopy[locale];
+---
+<footer class="site-footer">
+  <div class="site-shell__inner">
+    <div class="site-footer__inner">
+      <div class="site-footer__brand-block">
+        <div class="site-footer__brand">
+          <span class="site-footer__logo">
+            <img src="/logo.webp" alt="GoNavi" width="24" height="24" />
+          </span>
+          GoNavi
+        </div>
+        <p class="site-footer__copy">{copy.copy}</p>
+      </div>
+
+      <div class="site-footer__links">
+        <div class="site-footer__group">
+          <p class="site-footer__group-label">{copy.product}</p>
+          <div class="site-footer__group-links">
+            <a class="site-footer__group-link" href={withLocale(locale, '/download')}>
+              {locale === 'zh' ? '下载' : 'Download'}
+            </a>
+            <a class="site-footer__group-link" href={withLocale(locale, '/docs')}>
+              {locale === 'zh' ? '文档' : 'Docs'}
+            </a>
+            <a class="site-footer__group-link" href={withLocale(locale, '/changelog')}>
+              {locale === 'zh' ? '更新日志' : 'Changelog'}
+            </a>
+            <a class="site-footer__group-link" href={withLocale(locale, '/roadmap')}>
+              {locale === 'zh' ? '路线图' : 'Roadmap'}
+            </a>
+          </div>
+        </div>
+
+        <div class="site-footer__group">
+          <p class="site-footer__group-label">{copy.resources}</p>
+          <div class="site-footer__group-links">
+            <a class="site-footer__group-link" href={withLocale(locale, '/docs/install')}>
+              {locale === 'zh' ? '安装指南' : 'Installation'}
+            </a>
+            <a class="site-footer__group-link" href={GITHUB_URL} target="_blank" rel="noreferrer">
+              {copy.github}
+            </a>
+            <a class="site-footer__group-link" href={GITHUB_ISSUES_URL} target="_blank" rel="noreferrer">
+              {copy.issues}
+            </a>
+          </div>
+        </div>
+
+        <div class="site-footer__group">
+          <p class="site-footer__group-label">{copy.community}</p>
+          <div class="site-footer__group-links">
+            <a class="site-footer__group-link" href={GITHUB_DISCUSSIONS_URL} target="_blank" rel="noreferrer">
+              {copy.discussions}
+            </a>
+            <span class="site-footer__group-link site-footer__group-link--wechat">
+              {copy.wechat}：{copy.wechatId}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <span>© {new Date().getFullYear()} GoNavi</span>
+      <span>{copy.license}</span>
+    </div>
+  </div>
+</footer>

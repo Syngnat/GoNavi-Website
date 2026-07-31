@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { withLocale } from '../../../lib/i18n';
+import type { Locale } from '../../../lib/i18n';
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'zh' }, props: { locale: 'zh' } },
+    { params: { locale: 'en' }, props: { locale: 'en' } },
+  ];
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const isZh = locale === 'zh';
+
+const docs = (await getCollection('docs'))
+  .filter((d) => d.data.locale === locale)
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+
+const copy = {
+  title: isZh ? '文档' : 'Docs',
+  description: isZh ? '从安装到日常使用，按主题查找你需要的指南。' : 'Find guides for installation, configuration, and everyday use of GoNavi.',
+  eyebrow: isZh ? '使用文档' : 'Documentation',
+  readMore: isZh ? '阅读全文' : 'Read more',
+};
+---
+<BaseLayout locale={locale} title={copy.title} description={copy.description} current="/docs">
+  <div class="site-shell__inner page-wrap">
+    <section class="content-panel">
+      <p class="content-panel__eyebrow">{copy.eyebrow}</p>
+      <h1 class="content-panel__title">{copy.title}</h1>
+      <p class="content-panel__copy">{copy.description}</p>
+    </section>
+
+    <div class="docs-index__grid docs-index__grid--standalone">
+      {docs.map((doc) => (
+        <article class="docs-index__card docs-index__card--boxed">
+          <h2>{doc.data.title}</h2>
+          {doc.data.summary && <p>{doc.data.summary}</p>}
+          <a class="docs-index__action" href={withLocale(locale, `/docs/${doc.data.slug}`)}>
+            {copy.readMore}
+          </a>
+        </article>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

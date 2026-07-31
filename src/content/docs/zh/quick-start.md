@@ -1,3 +1,11 @@
+---
+title: 快速开始
+summary: 从下载到第一条查询的最短路径
+order: 2
+locale: zh
+slug: quick-start
+---
+
 # 快速开始
 
 1. 下载适合当前平台的安装包并启动 GoNavi。
@@ -12,5 +20,5 @@
 
 ## 下一步
 
-- 查看[安装与更新](./install.md)了解不同平台的安装差异。
-- 查看[连接配置](./connections.md)了解 URI、SSH 与代理的组合方式。
+- 查看[安装与更新](/zh/docs/install)了解不同平台的安装差异。
+- 查看[连接配置](/zh/docs/connections)了解 URI、SSH 与代理的组合方式。

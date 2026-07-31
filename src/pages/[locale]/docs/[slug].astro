@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+import { withLocale } from '../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs');
+  return docs.map((doc) => ({
+    params: { locale: doc.data.locale, slug: doc.data.slug },
+  }));
+}
+
+const { locale, slug } = Astro.params as { locale: 'zh' | 'en'; slug: string };
+const [doc] = (await getCollection('docs'))
+  .filter((d) => d.data.locale === locale && d.data.slug === slug);
+if (!doc) throw new Error(`Doc not found: ${locale}/${slug}`);
+const { Content } = await render(doc);
+
+const all = (await getCollection('docs'))
+  .filter((d) => d.data.locale === locale)
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+
+const isZh = locale === 'zh';
+---
+<BaseLayout locale={locale} title={doc.data.title} description={doc.data.summary} current={`/docs/${slug}`}>
+  <div class="site-shell__inner page-wrap">
+    <div class="docs-layout">
+      <aside class="docs-sidebar">
+        <p class="docs-sidebar__title">{isZh ? '文档' : 'Docs'}</p>
+        <nav class="docs-sidebar__nav">
+          {all.map((d) => (
+            <a
+              class:list={['docs-sidebar__link', { 'docs-sidebar__link--active': d.data.slug === slug }]}
+              href={withLocale(locale, `/docs/${d.data.slug}`)}
+            >
+              {d.data.title}
+            </a>
+          ))}
+        </nav>
+      </aside>
+
+      <article class="docs-article">
+        <header class="docs-article__header">
+          <h1 class="docs-article__title">{doc.data.title}</h1>
+          {doc.data.summary && <p class="docs-article__summary">{doc.data.summary}</p>}
+        </header>
+        <div class="docs-article__body">
+          <Content />
+        </div>
+      </article>
+    </div>
+  </div>
+</BaseLayout>

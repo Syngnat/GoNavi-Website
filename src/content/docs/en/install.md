@@ -1,3 +1,11 @@
+---
+title: Install & Updates
+summary: Install and upgrade GoNavi on Windows, macOS, and Linux
+order: 1
+locale: en
+slug: install
+---
+
 # Install & Updates
 
 ## Installation

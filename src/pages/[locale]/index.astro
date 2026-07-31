@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import FeatureGrid from '../../components/FeatureGrid.astro';
+import ScreenshotWall from '../../components/ScreenshotWall.astro';
+import DatabaseMatrix from '../../components/DatabaseMatrix.astro';
+import CTASection from '../../components/CTASection.astro';
+import { getEntry } from 'astro:content';
+import { withLocale } from '../../lib/i18n';
+import type { Locale } from '../../lib/i18n';
+import { GITHUB_URL } from '../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'zh' }, props: { locale: 'zh' } },
+    { params: { locale: 'en' }, props: { locale: 'en' } },
+  ];
+}
+
+const { locale } = Astro.props;
+const entry = await getEntry('site', locale);
+if (!entry) {
+  throw new Error(`Missing site content for locale: ${locale}`);
+}
+
+const data = entry.data;
+const statusLabel = { primary: locale === 'zh' ? '内置' : 'Built-in', supported: locale === 'zh' ? '插件' : 'Plugin' };
+---
+<BaseLayout locale={locale} title={data.title} description={data.description} current="/">
+  <Hero
+    locale={locale}
+    eyebrow={data.eyebrow}
+    title={data.title}
+    description={data.description}
+    primary={data.primaryCta}
+    secondary={data.secondaryCta}
+    highlights={data.highlights}
+  />
+
+  <FeatureGrid heading={data.featuresHeading} features={data.features} />
+  <ScreenshotWall heading={data.screenshotsHeading} screenshots={data.screenshots} />
+  <DatabaseMatrix heading={data.databasesHeading} rows={data.databases} statusLabel={statusLabel} />
+
+  <CTASection
+    eyebrow={locale === 'zh' ? '下载 / 文档 / 社区' : 'Download / Docs / Community'}
+    title={data.cta.title}
+    description={data.cta.description}
+    note={data.cta.note}
+    primary={locale === 'zh' ? '立即下载' : 'Download'}
+    secondary={locale === 'zh' ? '查看 GitHub' : 'View on GitHub'}
+    primaryHref={withLocale(locale, '/download')}
+    secondaryHref={GITHUB_URL}
+  />
+</BaseLayout>

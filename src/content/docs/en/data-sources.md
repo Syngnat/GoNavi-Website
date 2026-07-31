@@ -1,3 +1,11 @@
+---
+title: Supported Data Sources
+summary: Data sources GoNavi currently supports
+order: 4
+locale: en
+slug: data-sources
+---
+
 # Supported Data Sources
 
 The first website release focuses on the multi-database workflow rather than an exhaustive matrix.

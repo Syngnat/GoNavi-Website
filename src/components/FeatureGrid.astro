@@ -1,0 +1,38 @@
+---
+interface Feature {
+  icon: 'native' | 'multi' | 'flow' | 'team';
+  title: string;
+  description: string;
+}
+
+interface Props {
+  heading: { eyebrow: string; title: string; description: string };
+  features: Feature[];
+}
+
+const { heading, features } = Astro.props;
+---
+<section class="home-section-wrap">
+  <div class="site-shell__inner">
+    <div class="section-header">
+      <p class="section-eyebrow">{heading.eyebrow}</p>
+      <h2 class="section-title">{heading.title}</h2>
+      <p class="section-desc">{heading.description}</p>
+    </div>
+
+    <div class="feature-grid">
+      {features.map((f) => (
+        <article class="feature-card">
+          <div class={`feature-card__icon feature-card__icon--${f.icon}`}>
+            {f.icon === 'native' && '⚡'}
+            {f.icon === 'multi' && '◈'}
+            {f.icon === 'flow' && '◉'}
+            {f.icon === 'team' && '◐'}
+          </div>
+          <h3 class="feature-card__title">{f.title}</h3>
+          <p class="feature-card__desc">{f.description}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

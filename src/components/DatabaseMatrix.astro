@@ -1,0 +1,37 @@
+---
+interface DB {
+  name: string;
+  kind: string;
+  status: 'primary' | 'supported';
+  detail: string;
+}
+
+interface Props {
+  heading: { eyebrow: string; title: string; description: string };
+  rows: DB[];
+  statusLabel: { primary: string; supported: string };
+}
+
+const { heading, rows, statusLabel } = Astro.props;
+---
+<section class="home-section-wrap">
+  <div class="site-shell__inner">
+    <div class="section-header">
+      <p class="section-eyebrow">{heading.eyebrow}</p>
+      <h2 class="section-title">{heading.title}</h2>
+      <p class="section-desc">{heading.description}</p>
+    </div>
+
+    <div class="db-matrix">
+      {rows.map((row) => (
+        <div class="db-matrix__row">
+          <div class={`db-matrix__name db-matrix__name--${row.kind}`}>{row.name}</div>
+          <span class={`db-matrix__status db-matrix__status--${row.status}`}>
+            {statusLabel[row.status]}
+          </span>
+          <p class="db-matrix__detail">{row.detail}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getEntry } from 'astro:content';
+import type { Locale } from '../../lib/i18n';
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'zh' }, props: { locale: 'zh' } },
+    { params: { locale: 'en' }, props: { locale: 'en' } },
+  ];
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const entry = await getEntry('roadmap', locale);
+if (!entry) throw new Error(`Missing roadmap content for locale: ${locale}`);
+
+const { title, description, lanes } = entry.data;
+const eyebrow = locale === 'zh' ? '公开路线图' : 'Public roadmap';
+---
+<BaseLayout locale={locale} title={title} description={description} current="/roadmap">
+  <div class="site-shell__inner page-wrap">
+    <section class="content-panel">
+      <p class="content-panel__eyebrow">{eyebrow}</p>
+      <h1 class="content-panel__title">{title}</h1>
+      <p class="content-panel__copy">{description}</p>
+    </section>
+
+    <section class="roadmap-columns">
+      {lanes.map((lane) => (
+        <article class="roadmap-column">
+          <p class="section-eyebrow">{lane.title}</p>
+          <ul class="roadmap-column__list">
+            {lane.items.map((item) => <li class="roadmap-column__item">{item}</li>)}
+          </ul>
+        </article>
+      ))}
+    </section>
+  </div>
+</BaseLayout>

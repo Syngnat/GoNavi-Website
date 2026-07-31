@@ -1,3 +1,11 @@
+---
+title: 安装与更新
+summary: 在 Windows、macOS 与 Linux 上完成 GoNavi 的安装与升级
+order: 1
+locale: zh
+slug: install
+---
+
 # 安装与更新
 
 ## 安装方式

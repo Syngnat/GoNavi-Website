@@ -1,3 +1,11 @@
+---
+title: FAQ
+summary: Frequently asked questions and troubleshooting
+order: 99
+locale: en
+slug: faq
+---
+
 # FAQ
 
 ## Why can a connection succeed but queries still fail?

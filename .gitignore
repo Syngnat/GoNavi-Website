@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .npm-cache/
+.astro/
 .DS_Store
 .ace-tool/
 .idea/
+.superpowers/

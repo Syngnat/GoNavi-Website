@@ -1,29 +1,123 @@
 :root {
-  color-scheme: dark;
-  --bg: #050608;
-  --bg-muted: #0b0d11;
-  --bg-elevated: rgba(12, 15, 20, 0.92);
-  --surface-strong: #11161d;
-  --surface-bright: #171d26;
-  --text: #f5f7f8;
-  --muted: #96a0af;
-  --accent: #d7dde5;
-  --accent-strong: #ffffff;
-  --accent-soft: rgba(255, 255, 255, 0.08);
-  --accent-cool: #8ae4cf;
-  --accent-ice: #b4c4ff;
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.2);
-  --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.22);
-  --shadow: none;
-  --shadow-soft: none;
-  --radius: 14px;
-  --radius-lg: 18px;
-  --radius-sm: 10px;
-  --content-width: 1280px;
-  --content-narrow: 840px;
-  --header-height: 92px;
-  --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Space Grotesk', 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: light;
+
+  /* ===== Kimi Design Tokens (Light Mode) ===== */
+
+  /* Background */
+  --bg-primary: #ffffff;
+  --bg-primary-hover: rgba(0, 0, 0, 0.02);
+  --bg-primary-active: rgba(0, 0, 0, 0.04);
+
+  --bg-secondary: #f7f7f8;
+  --bg-secondary-hover: rgba(0, 0, 0, 0.03);
+  --bg-secondary-active: rgba(0, 0, 0, 0.05);
+
+  --bg-tertiary: #efeff1;
+  --bg-tertiary-hover: rgba(0, 0, 0, 0.05);
+  --bg-tertiary-active: rgba(0, 0, 0, 0.07);
+
+  --bg-quaternary: #e4e4e7;
+  --bg-quaternary-hover: rgba(0, 0, 0, 0.08);
+  --bg-quaternary-active: rgba(0, 0, 0, 0.1);
+
+  --bg-ground: #fafafa;
+
+  /* Labels / Text */
+  --text-primary: rgba(0, 0, 0, 0.88);
+  --text-primary-hover: rgba(0, 0, 0, 0.9);
+  --text-primary-active: rgba(0, 0, 0, 0.92);
+
+  --text-secondary: rgba(0, 0, 0, 0.6);
+  --text-secondary-hover: rgba(0, 0, 0, 0.64);
+  --text-secondary-active: rgba(0, 0, 0, 0.68);
+
+  --text-tertiary: rgba(0, 0, 0, 0.45);
+  --text-tertiary-hover: rgba(0, 0, 0, 0.5);
+  --text-tertiary-active: rgba(0, 0, 0, 0.55);
+
+  --text-quaternary: rgba(0, 0, 0, 0.3);
+  --text-quaternary-hover: rgba(0, 0, 0, 0.35);
+  --text-quaternary-active: rgba(0, 0, 0, 0.4);
+
+  /* Status */
+  --accent-blue: #0a6cff;
+  --accent-blue-hover: rgba(9, 99, 235, 1);
+  --accent-blue-active: rgba(8, 90, 214, 1);
+
+  --accent-green: #0ca53f;
+  --accent-green-hover: rgba(11, 149, 57, 1);
+  --accent-green-active: rgba(10, 133, 51, 1);
+
+  --accent-orange: #e08500;
+  --accent-orange-hover: rgba(204, 121, 0, 1);
+  --accent-orange-active: rgba(189, 112, 0, 1);
+
+  --accent-purple: #7a3ff2;
+  --accent-purple-hover: rgba(110, 51, 224, 1);
+  --accent-purple-active: rgba(99, 46, 201, 1);
+
+  --status-danger: #e02d3c;
+
+  /* Fills (subtle backgrounds) */
+  --fill-f1: rgba(0, 0, 0, 0.04);
+  --fill-f1-hover: rgba(0, 0, 0, 0.06);
+  --fill-f1-active: rgba(0, 0, 0, 0.08);
+
+  --fill-f2: rgba(0, 0, 0, 0.06);
+  --fill-f2-hover: rgba(0, 0, 0, 0.08);
+  --fill-f2-active: rgba(0, 0, 0, 0.1);
+
+  --fill-f3: rgba(0, 0, 0, 0.09);
+  --fill-f3-hover: rgba(0, 0, 0, 0.12);
+  --fill-f3-active: rgba(0, 0, 0, 0.15);
+
+  --fill-f4: rgba(0, 0, 0, 0.14);
+
+  /* Separator / Border */
+  --separator: rgba(0, 0, 0, 0.08);
+  --separator-hover: rgba(0, 0, 0, 0.14);
+
+  /* Surface overlays */
+  --mask-base: rgba(0, 0, 0, 0.5);
+  --mask-light: rgba(0, 0, 0, 0.25);
+
+  /* ===== Layout ===== */
+  --content-width: 1120px;
+  --content-narrow: 720px;
+  --header-height: 64px;
+
+  /* ===== Radius ===== */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ===== Typography ===== */
+  --font-sans: 'PingFang SC', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --font-mono: 'Geist Mono', 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+
+  /* ===== Spacing Rhythm ===== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ===== Z-Index Layers ===== */
+  --z-header: 500;
+  --z-modal-backdrop: 800;
+  --z-modal: 810;
+  --z-dialog-backdrop: 850;
+  --z-dialog: 860;
+  --z-tooltip: 900;
+  --z-toast: 1000;
 }

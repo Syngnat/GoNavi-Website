@@ -1,0 +1,45 @@
+---
+import '../styles/tokens.css';
+import '../styles/global.css';
+import '../styles/layout.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import type { Locale } from '../lib/i18n';
+import { withLocale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  title?: string;
+  description?: string;
+  /** e.g. '/download' */
+  current?: string;
+}
+
+const { locale, title, description, current = '/' } = Astro.props;
+const siteTitle = title ? `${title} · GoNavi` : 'GoNavi — Navigate every data source';
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:4173');
+---
+<!doctype html>
+<html lang={locale === 'zh' ? 'zh-CN' : 'en-US'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{siteTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/webp" href="/logo.webp" sizes="512x512" />
+    <meta property="og:title" content={siteTitle} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:image" content="/og-cover.svg" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <SiteHeader locale={locale} current={current} />
+      <main class="site-main">
+        <slot />
+      </main>
+      <SiteFooter locale={locale} />
+    </div>
+  </body>
+</html>

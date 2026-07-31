@@ -1,0 +1,32 @@
+---
+interface Props {
+  eyebrow: string;
+  title: string;
+  description: string;
+  primary: string;
+  secondary: string;
+  primaryHref: string;
+  secondaryHref: string;
+  note?: string;
+}
+
+const { eyebrow, title, description, primary, secondary, primaryHref, secondaryHref, note } = Astro.props;
+---
+<section class="home-section-wrap home-section-wrap--compact">
+  <div class="site-shell__inner">
+    <div class="cta-section">
+      <div class="cta-section__content">
+        <p class="section-eyebrow section-eyebrow--onColor">{eyebrow}</p>
+        <h2 class="cta-section__title">{title}</h2>
+        <p class="cta-section__desc">{description}</p>
+
+        <div class="cta-section__actions">
+          <a class="cta-btn cta-btn--light" href={primaryHref}>{primary}</a>
+          <a class="cta-btn cta-btn--outline" href={secondaryHref} target="_blank" rel="noreferrer">{secondary}</a>
+        </div>
+
+        {note && <p class="cta-section__note">{note}</p>}
+      </div>
+    </div>
+  </div>
+</section>

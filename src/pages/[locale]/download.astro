@@ -1,0 +1,277 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  detectArch,
+  detectFormat,
+  fetchReleases,
+  formatSize,
+  latestRelease,
+  pickPrimaryAsset,
+  scoreAsset,
+  type NormalizedRelease,
+  type NormalizedReleaseAsset,
+  type ReleasePlatform,
+} from '../../lib/releases';
+import type { Locale } from '../../lib/i18n';
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'zh' }, props: { locale: 'zh' } },
+    { params: { locale: 'en' }, props: { locale: 'en' } },
+  ];
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+const copy = {
+  zh: {
+    eyebrow: '发布目录',
+    title: '下载 GoNavi',
+    description: '根据你的系统自动推荐合适的安装包，也可手动切换平台或架构。',
+    fetchError: 'GitHub Releases 拉取失败，当前展示本地兜底快照。',
+    empty: '暂时没有发布资产。',
+    download: '下载',
+    chooseVariant: '选择版本',
+    recommended: '推荐',
+    ready: '可下载',
+    pending: '待发布',
+    platforms: {
+      windows: { title: 'Windows', description: '适用于大多数桌面环境，提供安装包与便携版。' },
+      macos: { title: 'macOS', description: '同时支持 Apple Silicon 与 Intel 机型，推荐桌面安装包。' },
+      linux: { title: 'Linux', description: '适用于常见发行版，提供 AppImage、deb 与 rpm 包。' },
+    } as Record<ReleasePlatform, { title: string; description: string }>,
+  },
+  en: {
+    eyebrow: 'Release directory',
+    title: 'Download GoNavi',
+    description: 'Get the recommended installer for your system, or switch platform and architecture manually.',
+    fetchError: 'Failed to load GitHub Releases; showing the local fallback snapshot.',
+    empty: 'No release assets available yet.',
+    download: 'Download',
+    chooseVariant: 'Choose variant',
+    recommended: 'Recommended',
+    ready: 'Ready',
+    pending: 'Pending',
+    platforms: {
+      windows: { title: 'Windows', description: 'Built for most desktop setups, available as an installer or portable archive.' },
+      macos: { title: 'macOS', description: 'Supports Apple Silicon and Intel machines — desktop installer recommended.' },
+      linux: { title: 'Linux', description: 'Targets common distributions with AppImage, deb, and rpm packages.' },
+    } as Record<ReleasePlatform, { title: string; description: string }>,
+  },
+} as const;
+
+const t = copy[locale];
+
+let releases: NormalizedRelease[] = [];
+let fetchError: string | null = null;
+try {
+  releases = await fetchReleases();
+} catch (e) {
+  fetchError = e instanceof Error ? e.message : 'unknown';
+}
+
+const latest = latestRelease(releases);
+
+// Fallback snapshot if the fetch failed / returned nothing
+if (!latest) {
+  const fallback: NormalizedRelease = {
+    id: 0,
+    tag: 'v0.0.0',
+    name: 'v0.0.0',
+    url: null,
+    body: '',
+    publishedAt: null,
+    draft: false,
+    prerelease: false,
+    assets: [],
+  };
+  releases = [fallback];
+  if (!fetchError) fetchError = 'no-data';
+}
+
+const current = latestRelease(releases)!;
+const allPlatforms: ReleasePlatform[] = ['windows', 'macos', 'linux'];
+
+// For SSR we don't know the user's platform; we emit them all and let the
+// client script reorder + pick the right arch.
+const formatDate = (s: string | null) => {
+  if (!s) return null;
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium' }).format(d);
+};
+---
+<BaseLayout locale={locale} title={t.title} description={t.description} current="/download">
+  <div class="release-page site-shell__inner page-wrap">
+    <section class="release-page__intro content-panel">
+      <p class="content-panel__eyebrow">{t.eyebrow}</p>
+      <h1 class="content-panel__title">{t.title}</h1>
+      <p class="content-panel__copy">{t.description}</p>
+    </section>
+
+    {fetchError && (
+      <p class="release-page__status release-page__status--error">{t.fetchError}</p>
+    )}
+
+    <section class="release-page__section release-page__section--platforms">
+      <div class="platform-grid" data-platform-grid>
+        {allPlatforms.map((platform) => {
+          const candidates = current.assets
+            .filter((a) => a.platform === platform)
+            .sort((l, r) => scoreAsset(platform, r) - scoreAsset(platform, l) || l.name.localeCompare(r.name));
+          const primary = pickPrimaryAsset(current.assets, platform);
+          return (
+            <article class="platform-card" data-platform-card data-platform={platform}>
+              <div class="platform-card__header">
+                <p class="platform-card__platform">{t.platforms[platform].title}</p>
+                <div class="platform-card__badges">
+                  <span class="platform-card__badge--recommended" data-recommended-badge hidden>
+                    {t.recommended}
+                  </span>
+                  {primary ? (
+                    <span class="platform-card__status platform-card__status--ready">{t.ready}</span>
+                  ) : (
+                    <span class="platform-card__status">{t.pending}</span>
+                  )}
+                </div>
+              </div>
+
+              <p class="platform-card__description">{t.platforms[platform].description}</p>
+
+              {primary ? (
+                <div class="platform-card__asset">
+                  {candidates.length > 1 ? (
+                    <label class="platform-card__picker">
+                      <span class="platform-card__picker-label">{t.chooseVariant}</span>
+                      <select class="platform-card__select" data-asset-picker>
+                        {candidates.map((a) => {
+                          const arch = detectArch(a.name);
+                          const format = detectFormat(a.name);
+                          const suffix = [format, arch].filter(Boolean).join(' · ');
+                          const shortLabel = a.name.replace(/^GoNavi[-_]/i, '').replace(/\.(dmg|msi|exe|zip|tar\.gz|tgz|deb|rpm|AppImage)$/i, '');
+                          return (
+                            <option
+                              value={a.url}
+                              data-arch={arch ?? ''}
+                              data-name={a.name}
+                              data-size={a.size != null ? formatSize(a.size) : ''}
+                              data-updated={a.updatedAt ? formatDate(a.updatedAt) ?? '' : ''}
+                              selected={primary && a.url === primary.url}
+                            >
+                              {shortLabel}{suffix ? ` (${suffix})` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </label>
+                  ) : null}
+
+                  <div class="platform-card__asset-info">
+                    <span class="platform-card__asset-meta" data-asset-meta>
+                      {(() => {
+                        const arch = detectArch(primary.name);
+                        const format = detectFormat(primary.name);
+                        const parts: string[] = [];
+                        if (format) parts.push(format);
+                        if (arch) parts.push(arch);
+                        const size = formatSize(primary.size);
+                        if (size) parts.push(size);
+                        const updated = formatDate(primary.updatedAt);
+                        if (updated) parts.push(updated);
+                        return parts.join(' · ');
+                      })()}
+                    </span>
+                  </div>
+
+                  <a class="platform-card__action platform-card__action--primary" href={primary.url} rel="noreferrer" data-download-link>
+                    {t.download}
+                  </a>
+                </div>
+              ) : (
+                <p class="platform-card__missing">{t.empty}</p>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  </div>
+
+  <script is:inline define:vars={{ locale }}>
+    (function () {
+      function detectPlatform() {
+        const ua = navigator.userAgent;
+        if (/windows/i.test(ua)) return 'windows';
+        if (/mac(os)?|darwin|cfr/i.test(ua)) return 'macos';
+        if (/linux|x11|android/i.test(ua)) return 'linux';
+        return null;
+      }
+      function detectArchFromUA() {
+        const ua = navigator.userAgent;
+        if (/arm64|aarch64/i.test(ua)) return 'arm64';
+        if (/wow64|win64|x64|x86_64/i.test(ua)) return 'x64';
+        return null;
+      }
+
+      const userPlatform = detectPlatform();
+      const userArch = detectArchFromUA();
+      const grid = document.querySelector('[data-platform-grid]');
+      if (!grid) return;
+      const cards = Array.from(grid.querySelectorAll('[data-platform-card]'));
+
+      // Reorder so user's platform comes first and mark it as recommended
+      if (userPlatform) {
+        const target = cards.find((c) => c.dataset.platform === userPlatform);
+        if (target) {
+          grid.prepend(target);
+          target.classList.add('platform-card--recommended');
+          const badge = target.querySelector('[data-recommended-badge]');
+          if (badge) badge.removeAttribute('hidden');
+        }
+      }
+
+      // For each card, if user arch matches an asset, preselect it
+      cards.forEach((card) => {
+        const select = card.querySelector('[data-asset-picker]');
+        const link = card.querySelector('[data-download-link]');
+        const meta = card.querySelector('[data-asset-meta]');
+        if (!select || !link) return;
+
+        function syncMeta(option) {
+          if (!meta || !option) return;
+          const parts = [];
+          const name = option.dataset.name || '';
+          const arch = option.dataset.arch || '';
+          // Extract format from name (e.g. ".dmg", ".msi")
+          const m = name.match(/\.(dmg|msi|exe|pkg|deb|rpm|appimage|tar\.gz|tgz)$/i);
+          if (m) parts.push(m[1].toLowerCase());
+          if (arch) parts.push(arch);
+          if (option.dataset.size) parts.push(option.dataset.size);
+          if (option.dataset.updated) parts.push(option.dataset.updated);
+          meta.textContent = parts.join(' · ');
+        }
+
+        // Preselect based on user arch if available
+        if (userArch) {
+          const options = Array.from(select.options);
+          const match = options.find((o) => (o.dataset.arch || '') === userArch);
+          if (match) {
+            select.value = match.value;
+            link.href = match.value;
+            syncMeta(match);
+          }
+        }
+
+        select.addEventListener('change', () => {
+          const opt = select.options[select.selectedIndex];
+          link.href = opt.value;
+          syncMeta(opt);
+        });
+      });
+    })();
+  </script>
+</BaseLayout>

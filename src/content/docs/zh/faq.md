@@ -1,3 +1,11 @@
+---
+title: 常见问题
+summary: 常见问题与故障排查
+order: 99
+locale: zh
+slug: faq
+---
+
 # 常见问题
 
 ## 为什么连接成功后仍无法查询？

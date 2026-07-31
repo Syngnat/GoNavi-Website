@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { fetchReleases, latestRelease } from '../../lib/releases';
+import type { Locale } from '../../lib/i18n';
+import { marked } from 'marked';
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'zh' }, props: { locale: 'zh' } },
+    { params: { locale: 'en' }, props: { locale: 'en' } },
+  ];
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const isZh = locale === 'zh';
+
+const copy = {
+  title: isZh ? '更新日志' : 'Changelog',
+  eyebrow: isZh ? '版本动态' : 'Release notes',
+  description: isZh
+    ? '最新版本的新功能、改进与修复记录，来自 GitHub Releases。'
+    : 'The latest release notes, improvements, and fixes from GitHub Releases.',
+  fetchError: isZh ? '无法拉取 GitHub Releases，当前展示静态兜底内容。' : 'Failed to load GitHub Releases; showing a static fallback.',
+  publishedAt: isZh ? '发布时间' : 'Published',
+  assets: isZh ? '资产' : 'Assets',
+  none: isZh ? '暂无资产' : 'No assets',
+};
+
+let releases = [];
+let failed = false;
+try {
+  releases = await fetchReleases(20);
+} catch {
+  failed = true;
+}
+
+const latest = latestRelease(releases);
+const formatDate = (s: string | null) => {
+  if (!s) return '';
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat(isZh ? 'zh-CN' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(d);
+};
+---
+<BaseLayout locale={locale} title={copy.title} description={copy.description} current="/changelog">
+  <div class="site-shell__inner page-wrap">
+    <section class="content-panel">
+      <p class="content-panel__eyebrow">{copy.eyebrow}</p>
+      <h1 class="content-panel__title">{copy.title}</h1>
+      <p class="content-panel__copy">{copy.description}</p>
+    </section>
+
+    {failed && <p class="release-page__status release-page__status--error">{copy.fetchError}</p>}
+
+    <section class="release-timeline">
+      {latest && (
+        <article class="release-timeline__item">
+          <div class="release-timeline__rail">
+            <span class="release-timeline__dot" />
+          </div>
+          <div class="release-timeline__body">
+            <div class="release-timeline__header">
+              <p class="release-timeline__tag">{latest.tag}</p>
+              <p class="release-timeline__date">{formatDate(latest.publishedAt)}</p>
+            </div>
+            <h2 class="release-timeline__title">{latest.name}</h2>
+            {latest.body && <div class="release-timeline__copy" set:html={marked.parse(latest.body)} />}
+          </div>
+        </article>
+      )}
+    </section>
+  </div>
+</BaseLayout>

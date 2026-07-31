@@ -1,3 +1,11 @@
+---
+title: Connection Setup
+summary: Manage, edit, and share your database connections
+order: 3
+locale: en
+slug: connections
+---
+
 # Connection Setup
 
 GoNavi keeps common connection capabilities in one consistent flow so teams can move across databases without re-learning the basics.
