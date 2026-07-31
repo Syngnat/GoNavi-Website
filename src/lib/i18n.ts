@@ -15,10 +15,11 @@ export function otherLocale(locale: Locale): Locale {
   return locale === 'zh' ? 'en' : 'zh';
 }
 
-/** Build a locale-prefixed path: `withLocale('zh', '/download')` -> `/zh/download` */
+/** Build a locale-prefixed static route: `withLocale('zh', '/download')` -> `/zh/download/` */
 export function withLocale(locale: Locale, path: string): string {
   const clean = path.startsWith('/') ? path : `/${path}`;
-  return `/${locale}${clean}`;
+  const route = clean === '/' ? '/' : `${clean.replace(/\/+$/, '')}/`;
+  return `/${locale}${route}`;
 }
 
 /** Strip the leading `/<locale>` prefix from an Astro URL. */

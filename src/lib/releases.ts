@@ -197,52 +197,47 @@ export interface GitHubStats {
   totalDownloads: number;
 }
 
+const GITHUB_REPOSITORY_API = 'https://api.github.com/repos/Syngnat/GoNavi';
+const GITHUB_API_HEADERS = {
+  Accept: 'application/vnd.github+json',
+  'User-Agent': 'GoNavi-Website/build',
+};
+
 /** Fetch GitHub star count and total release download count at build time. */
 let cachedStats: GitHubStats | null = null;
 
 export async function fetchGitHubStats(): Promise<GitHubStats> {
   if (cachedStats) return cachedStats;
 
-  let stars = 0;
-  let totalDownloads = 0;
+  const [repoResult, releasesResult] = await Promise.allSettled([
+    fetch(GITHUB_REPOSITORY_API, {
+      headers: GITHUB_API_HEADERS,
+      signal: AbortSignal.timeout(8_000),
+    }).then(async (res) => {
+      if (!res.ok) throw new Error(`GitHub repository fetch failed: HTTP ${res.status}`);
+      return res.json() as Promise<{ stargazers_count?: number }>;
+    }),
+    fetch(`${GITHUB_RELEASES_API}?per_page=100`, {
+      headers: GITHUB_API_HEADERS,
+      signal: AbortSignal.timeout(15_000),
+    }).then(async (res) => {
+      if (!res.ok) throw new Error(`GitHub releases fetch failed: HTTP ${res.status}`);
+      return res.json() as Promise<Array<{ assets?: Array<{ download_count?: number }> }> >;
+    }),
+  ]);
 
-  try {
-    const { execSync } = await import('child_process');
-    const token = execSync('gh auth token', { encoding: 'utf-8', timeout: 5_000 }).trim();
-    if (token) {
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/vnd.github+json',
-        'User-Agent': 'GoNavi-Website/build',
-      };
-
-      const repoRes = await fetch('https://api.github.com/repos/Syngnat/GoNavi', {
-        headers,
-        signal: AbortSignal.timeout(8_000),
-      });
-      if (repoRes.ok) {
-        const data = await repoRes.json() as { stargazers_count?: number };
-        stars = data.stargazers_count ?? 0;
-      }
-
-      const releasesRes = await fetch(
-        'https://api.github.com/repos/Syngnat/GoNavi/releases?per_page=100',
-        { headers, signal: AbortSignal.timeout(15_000) },
-      );
-      if (releasesRes.ok) {
-        const releasesData = await releasesRes.json() as Array<{ assets?: Array<{ download_count?: number }> }>;
-        for (const release of releasesData) {
-          if (release.assets) {
-            for (const asset of release.assets) {
-              totalDownloads += asset.download_count ?? 0;
-            }
-          }
-        }
-      }
-    }
-  } catch {
-    // gh CLI or API unavailable during build, fall back to 0
-  }
+  const stars = repoResult.status === 'fulfilled'
+    ? repoResult.value.stargazers_count ?? 0
+    : 0;
+  const totalDownloads = releasesResult.status === 'fulfilled'
+    ? releasesResult.value.reduce(
+        (total, release) => total + (release.assets ?? []).reduce(
+          (assetTotal, asset) => assetTotal + (asset.download_count ?? 0),
+          0,
+        ),
+        0,
+      )
+    : 0;
 
   cachedStats = { stars, totalDownloads };
   return cachedStats;

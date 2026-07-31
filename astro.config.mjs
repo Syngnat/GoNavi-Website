@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
-  site: 'https://gonavi.example.com',
+  site: 'https://gonavi.org',
   integrations: [mdx()],
   markdown: {
     shikiConfig: {
