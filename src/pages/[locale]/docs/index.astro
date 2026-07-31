@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import DocsSearch from '../../../components/DocsSearch.astro';
 import { getCollection } from 'astro:content';
 import { withLocale } from '../../../lib/i18n';
 import type { Locale } from '../../../lib/i18n';
@@ -36,6 +37,8 @@ const copy = {
       <h1 class="content-panel__title">{copy.title}</h1>
       <p class="content-panel__copy">{copy.description}</p>
     </section>
+
+    <DocsSearch locale={locale} variant="standalone" />
 
     <div class="docs-index__grid docs-index__grid--standalone">
       {docs.map((doc, i) => (

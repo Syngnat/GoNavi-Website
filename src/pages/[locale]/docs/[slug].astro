@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import DocsSearch from '../../../components/DocsSearch.astro';
 import { getCollection, render } from 'astro:content';
 import { withLocale } from '../../../lib/i18n';
 
@@ -37,6 +38,7 @@ const copy = {
     <div class="docs-layout">
       <aside class="docs-sidebar">
         <p class="docs-sidebar__title">{copy.sidebarTitle}</p>
+        <DocsSearch locale={locale} variant="sidebar" />
         <nav class="docs-sidebar__nav">
           {all.map((d) => (
             <a

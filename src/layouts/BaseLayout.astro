@@ -28,8 +28,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:41
     <title>{siteTitle}</title>
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <link rel="alternate icon" type="image/webp" href="/logo.webp" sizes="512x512" />
+    <link rel="icon" type="image/webp" href="/logo.webp?v=20260731" sizes="512x512" />
     <meta property="og:title" content={siteTitle} />
     {description && <meta property="og:description" content={description} />}
     <meta property="og:image" content="/og-cover.svg" />
