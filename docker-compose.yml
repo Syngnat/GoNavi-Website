@@ -1,6 +1,7 @@
 services:
   web:
     build: .
-    ports:
-      - "8080:80"
-    restart: unless-stopped
+    # 构建产物在 dist/ 目录，服务器已有 Nginx，直接指向 dist/ 即可
+    # 示例 Nginx 配置：
+    #   root /path/to/GoNavi-Website/dist;
+    #   server_name your-domain.com;

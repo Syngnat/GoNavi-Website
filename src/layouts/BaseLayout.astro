@@ -6,6 +6,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import type { Locale } from '../lib/i18n';
 import { withLocale } from '../lib/i18n';
+import { isAnalyticsEnabled, ANALYTICS_NAMESPACE } from '../lib/analytics';
 
 interface Props {
   locale: Locale;
@@ -32,6 +33,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:41
     <meta property="og:title" content={siteTitle} />
     {description && <meta property="og:description" content={description} />}
     <meta property="og:image" content="/og-cover.svg" />
+    {isAnalyticsEnabled && (
+      <script is:inline>
+        const p = location.pathname.replace(/\/+$/, '') || '/index';
+        fetch(`https://api.countapi.xyz/hit/${ANALYTICS_NAMESPACE}${p}`).catch(() => {});
+      </script>
+    )}
   </head>
   <body>
     <div class="site-shell">
