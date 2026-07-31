@@ -38,14 +38,18 @@ const copy = {
     </section>
 
     <div class="docs-index__grid docs-index__grid--standalone">
-      {docs.map((doc) => (
-        <article class="docs-index__card docs-index__card--boxed">
-          <h2>{doc.data.title}</h2>
-          {doc.data.summary && <p>{doc.data.summary}</p>}
-          <a class="docs-index__action" href={withLocale(locale, `/docs/${doc.data.slug}`)}>
+      {docs.map((doc, i) => (
+        <a class="docs-index__card docs-index__card--boxed" href={withLocale(locale, `/docs/${doc.data.slug}`)}>
+          <span class="docs-index__card-index">{String(i + 1).padStart(2, '0')}</span>
+          <div class="docs-index__card-main">
+            <h2>{doc.data.title}</h2>
+            {doc.data.summary && <p>{doc.data.summary}</p>}
+          </div>
+          <span class="docs-index__more">
             {copy.readMore}
-          </a>
-        </article>
+            <span class="docs-index__more-arrow" aria-hidden="true">→</span>
+          </span>
+        </a>
       ))}
     </div>
   </div>

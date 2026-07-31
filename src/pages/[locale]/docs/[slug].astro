@@ -20,13 +20,23 @@ const all = (await getCollection('docs'))
   .filter((d) => d.data.locale === locale)
   .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
 
+const index = all.findIndex((d) => d.data.slug === slug);
+const prev = index > 0 ? all[index - 1] : null;
+const next = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
+
 const isZh = locale === 'zh';
+const copy = {
+  sidebarTitle: isZh ? '文档' : 'Docs',
+  backToIndex: isZh ? '全部文档' : 'All docs',
+  prev: isZh ? '上一篇' : 'Previous',
+  next: isZh ? '下一篇' : 'Next',
+};
 ---
 <BaseLayout locale={locale} title={doc.data.title} description={doc.data.summary} current={`/docs/${slug}`}>
   <div class="site-shell__inner page-wrap">
     <div class="docs-layout">
       <aside class="docs-sidebar">
-        <p class="docs-sidebar__title">{isZh ? '文档' : 'Docs'}</p>
+        <p class="docs-sidebar__title">{copy.sidebarTitle}</p>
         <nav class="docs-sidebar__nav">
           {all.map((d) => (
             <a
@@ -37,6 +47,9 @@ const isZh = locale === 'zh';
             </a>
           ))}
         </nav>
+        <a class="docs-sidebar__back" href={withLocale(locale, '/docs')}>
+          {copy.backToIndex}
+        </a>
       </aside>
 
       <article class="docs-article">
@@ -47,6 +60,23 @@ const isZh = locale === 'zh';
         <div class="docs-article__body">
           <Content />
         </div>
+
+        {(prev || next) && (
+          <nav class="docs-pager">
+            {prev ? (
+              <a class="docs-pager__item docs-pager__item--prev" href={withLocale(locale, `/docs/${prev.data.slug}`)}>
+                <span class="docs-pager__label">{copy.prev}</span>
+                <span class="docs-pager__title">{prev.data.title}</span>
+              </a>
+            ) : <span class="docs-pager__item docs-pager__item--placeholder" />}
+            {next ? (
+              <a class="docs-pager__item docs-pager__item--next" href={withLocale(locale, `/docs/${next.data.slug}`)}>
+                <span class="docs-pager__label">{copy.next}</span>
+                <span class="docs-pager__title">{next.data.title}</span>
+              </a>
+            ) : <span class="docs-pager__item docs-pager__item--placeholder" />}
+          </nav>
+        )}
       </article>
     </div>
   </div>
