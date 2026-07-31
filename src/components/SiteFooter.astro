@@ -65,6 +65,18 @@ const copy = footerCopy[locale];
             <span class="site-footer__group-link site-footer__group-link--wechat">
               {copy.wechat}：{copy.wechatId}
             </span>
+            {locale === 'en' && (
+              <div class="site-footer__telegram">
+                <img
+                  src="/telegram-qr.png"
+                  alt="Telegram QR code"
+                  width="96"
+                  height="96"
+                  loading="lazy"
+                />
+                <span class="site-footer__telegram-label">Telegram</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
