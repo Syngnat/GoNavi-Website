@@ -1,21 +1,62 @@
 ---
 title: FAQ
-summary: Frequently asked questions and troubleshooting
+summary: Common install, launch, and connection troubleshooting
 order: 99
 locale: en
 slug: faq
 ---
 
-# FAQ
+## Windows: blank window or immediate exit on launch?
 
-## Why can a connection succeed but queries still fail?
+The GoNavi desktop app on Windows depends on the **Microsoft Edge WebView2 Runtime** (a system component, not full Chrome). Some intranet / thin / Server / LTSC images ship without it, causing a blank window, immediate exit, or a missing-WebView2 error.
 
-Verify the target database, default schema, and account permissions for the current environment.
+Check whether it is installed in PowerShell:
 
-## What if the download page cannot fetch the latest data?
+```powershell
+Test-Path "${env:ProgramFiles(x86)}\Microsoft\EdgeWebView\Application"
+```
 
-The website prefers GitHub Releases and automatically falls back to a local snapshot when the API is unavailable.
+If missing, download the **Evergreen Bootstrapper** from the [official download page](https://developer.microsoft.com/microsoft-edge/webview2/). For fully air-gapped machines, use the **Standalone Installer** (e.g. `MicrosoftEdgeWebView2RuntimeInstallerX64.exe`).
 
-## Why do some drivers need extra setup?
+> If the desktop WebView cannot be installed yet, you can temporarily use the experimental Web Server mode in a browser: `GoNavi.exe web-server --addr 127.0.0.1:34116` (do not expose an unhardened endpoint to the public internet). See [Issue #672](https://github.com/Syngnat/GoNavi/issues/672).
 
-Some data sources or environments depend on optional drivers, SSH, or proxy settings. Standardize the configuration first.
+## macOS: "App is damaged and can't be opened"?
+
+Without Apple Notarization, Gatekeeper may block the app. Move it to Applications and run:
+
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/GoNavi.app
+```
+
+You can also right-click → Open in Finder.
+
+## Linux: missing WebKitGTK on launch?
+
+Install the dependencies for your distro:
+
+```bash
+# Debian 13 / Ubuntu 24.04+
+sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.1-0 libjavascriptcoregtk-4.1-0
+
+# Ubuntu 22.04 / Debian 12
+sudo apt-get install -y libgtk-3-0 libwebkit2gtk-4.0-37 libjavascriptcoregtk-4.0-18
+```
+
+Builds with the `-WebKit41` suffix suit Debian 13 / Ubuntu 24.04+ better.
+
+## Linux: CJK characters render as boxes?
+
+Install CJK fonts and refresh the cache:
+
+```bash
+sudo apt-get install -y fonts-noto-cjk fonts-wqy-microhei
+fc-cache -fv
+```
+
+## What if the download page can't fetch the latest release?
+
+The download page prefers GitHub Releases and automatically falls back to a local snapshot when the API is unavailable. The full release history is always available on [GitHub Releases](https://github.com/Syngnat/GoNavi/releases).
+
+## Why do some data sources need an extra driver?
+
+GoNavi data sources come in two groups: built-in and optional driver agents. Optional driver agents (e.g. SQL Server, SQLite, MongoDB, ClickHouse) must be installed and enabled in the Driver Manager first. See [Supported Data Sources](/en/docs/data-sources).
