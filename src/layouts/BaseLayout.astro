@@ -6,7 +6,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import type { Locale } from '../lib/i18n';
 import { withLocale } from '../lib/i18n';
-import { isAnalyticsEnabled, ANALYTICS_NAMESPACE } from '../lib/analytics';
+import { isAnalyticsEnabled, trackPageView } from '../lib/analytics';
 
 interface Props {
   locale: Locale;
@@ -34,8 +34,27 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:41
     <meta property="og:image" content="/og-cover.svg" />
     {isAnalyticsEnabled && (
       <script is:inline>
-        const p = location.pathname.replace(/\/+$/, '') || '/index';
-        fetch(`https://api.countapi.xyz/hit/${ANALYTICS_NAMESPACE}${p}`).catch(() => {});
+        (function () {
+          const p = location.pathname.replace(/\/+$/, '') || '/index';
+          // 自建统计：记录 uid + 页面路径到 nginx 日志（替代已停服的 countapi）
+          const q = new URLSearchParams({ uid: '', p });
+          const key = 'gonavi_uid_v1';
+          let uid = null;
+          try {
+            uid = localStorage.getItem(key);
+            if (!uid) {
+              uid = 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+              localStorage.setItem(key, uid);
+            }
+          } catch (e) {}
+          if (uid) {
+            q.set('uid', uid);
+            const ok = navigator.sendBeacon('/__stats?' + q.toString());
+            if (!ok) {
+              fetch('/__stats?' + q.toString(), { method: 'GET', keepalive: true }).catch(function () {});
+            }
+          }
+        })();
       </script>
     )}
   </head>
