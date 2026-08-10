@@ -39,10 +39,11 @@ function visitorId(): string | null {
 export function trackPageView(path: string): void {
   const uid = visitorId();
   if (!uid) return;
-  const q = new URLSearchParams({ uid, p: path });
+  // 手动拼接，避免 URLSearchParams 把路径里的 / 编码成 %2F
+  const q = `uid=${encodeURIComponent(uid)}&p=${path}`;
   // sendBeacon 在页面卸载时也能可靠送达，且不阻塞
-  const ok = navigator.sendBeacon(`/__stats?${q.toString()}`);
+  const ok = navigator.sendBeacon(`/__stats?${q}`);
   if (!ok) {
-    fetch(`/__stats?${q.toString()}`, { method: 'GET', keepalive: true }).catch(() => {});
+    fetch(`/__stats?${q}`, { method: 'GET', keepalive: true }).catch(() => {});
   }
 }

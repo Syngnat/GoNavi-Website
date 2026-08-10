@@ -36,8 +36,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:41
       <script is:inline>
         (function () {
           const p = location.pathname.replace(/\/+$/, '') || '/index';
-          // 自建统计：记录 uid + 页面路径到 nginx 日志（替代已停服的 countapi）
-          const q = new URLSearchParams({ uid: '', p });
           const key = 'gonavi_uid_v1';
           let uid = null;
           try {
@@ -48,10 +46,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:41
             }
           } catch (e) {}
           if (uid) {
-            q.set('uid', uid);
-            const ok = navigator.sendBeacon('/__stats?' + q.toString());
+            // 手动拼接，避免 URLSearchParams 把路径里的 / 编码成 %2F
+            const q = 'uid=' + encodeURIComponent(uid) + '&p=' + p;
+            const ok = navigator.sendBeacon('/__stats?' + q);
             if (!ok) {
-              fetch('/__stats?' + q.toString(), { method: 'GET', keepalive: true }).catch(function () {});
+              fetch('/__stats?' + q, { method: 'GET', keepalive: true }).catch(function () {});
             }
           }
         })();
