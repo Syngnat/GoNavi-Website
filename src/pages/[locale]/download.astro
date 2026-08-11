@@ -187,7 +187,7 @@ const formatDate = (s: string | null) => {
                     </span>
                   </div>
 
-                  <a class="platform-card__action platform-card__action--primary" href={primary.url} rel="noreferrer" data-download-link>
+                  <a class="platform-card__action platform-card__action--primary" href={primary.url} rel="noreferrer" data-download-link data-download-platform={platform}>
                     {t.download}
                   </a>
                 </div>
@@ -270,6 +270,18 @@ const formatDate = (s: string | null) => {
           const opt = select.options[select.selectedIndex];
           link.href = opt.value;
           syncMeta(opt);
+        });
+
+        // 下载点击埋点：记录真实触发下载的动作（含平台+文件名）
+        link.addEventListener('click', function () {
+          try {
+            const uid = localStorage.getItem('gonavi_uid_v1');
+            const name = (select.options[select.selectedIndex] || {}).dataset && select.options[select.selectedIndex].dataset.name;
+            const file = encodeURIComponent(link.href.split('/').pop() || '');
+            const pl = link.getAttribute('data-download-platform') || '';
+            const q = 'uid=' + encodeURIComponent(uid || '') + '&act=download&p=' + location.pathname + '&file=' + file + '&plat=' + pl;
+            navigator.sendBeacon('/__stats?' + q);
+          } catch (e) {}
         });
       });
     })();
