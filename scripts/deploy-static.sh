@@ -24,6 +24,15 @@ if ! flock -n 9; then
   exit 1
 fi
 
+# Memory guard: docker builds on this VPS OOM if available RAM is too low.
+# Skip the build instead of hanging the machine.
+mem_available_kb=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
+mem_available_mb=$((mem_available_kb / 1024))
+if [ "$mem_available_mb" -lt 400 ]; then
+  printf 'Skip deploy: only %s MB RAM available (< 400 MB).\n' "$mem_available_mb" >&2
+  exit 3
+fi
+
 if [ -e "$release_dir" ] || [ -e "$staging_dir" ] || [ -e "$next_link" ]; then
   printf '%s\n' "Release path already exists: $release_id" >&2
   exit 1
