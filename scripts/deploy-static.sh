@@ -35,6 +35,7 @@ if [ -L "$current_link" ]; then
 fi
 
 DOCKER_BUILDKIT=1 docker build \
+  --build-arg CACHE_BUST="$(date -u +%Y%m%dT%H%M%SZ)" \
   --target output \
   --output "type=local,dest=$staging_dir" \
   "$repo_dir"

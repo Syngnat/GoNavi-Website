@@ -15,6 +15,11 @@ COPY . .
 
 # Build the static site.  Static files must be readable by the unprivileged
 # Nginx worker after they are exported to the host.
+#
+# CACHE_BUST forces this layer to rebuild (and re-fetch the latest GitHub
+# release) on every deploy.  The deploy script passes the current timestamp,
+# so version numbers on the download page never go stale from BuildKit cache.
+ARG CACHE_BUST
 RUN npm run build && chmod -R a+rX /app/dist
 
 # This is an export-only stage, consumed by Docker BuildKit's --output flag.
