@@ -25,11 +25,13 @@ if ! flock -n 9; then
 fi
 
 # Memory guard: docker builds on this VPS OOM if available RAM is too low.
-# Skip the build instead of hanging the machine.
+# Count swap too (swap-backed builds are slow but safe). Skip only when
+# there is genuinely no headroom at all.
 mem_available_kb=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
-mem_available_mb=$((mem_available_kb / 1024))
+swap_free_kb=$(awk '/SwapFree/ {print $2}' /proc/meminfo)
+mem_available_mb=$(( (mem_available_kb + swap_free_kb) / 1024 ))
 if [ "$mem_available_mb" -lt 400 ]; then
-  printf 'Skip deploy: only %s MB RAM available (< 400 MB).\n' "$mem_available_mb" >&2
+  printf 'Skip deploy: only %s MB memory headroom (RAM+swap < 400 MB).\n' "$mem_available_mb" >&2
   exit 3
 fi
 
