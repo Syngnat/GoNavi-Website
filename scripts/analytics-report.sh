@@ -31,6 +31,15 @@ import sys, collections, urllib.parse
 
 log = sys.argv[1]
 
+
+def _eng(ref: str) -> str:
+    """识别搜索引擎名：按主机名关键词匹配，失败取主域。"""
+    r = (ref or "").lower()
+    for k in ("google", "bing", "baidu", "sogou", "yandex", "360", "so.com"):
+        if k in r:
+            return {"google":"google","bing":"bing","baidu":"baidu","sogou":"sogou","yandex":"yandex","360":"360","so.com":"360"}[k]
+    return (ref or "?").split(".")[0] if ref else "?"
+
 def dec(x):
     try: return urllib.parse.unquote(x)
     except: return x
@@ -90,7 +99,7 @@ for ref, c in refs.most_common(12):
 # 搜索关键字（仅搜索引擎来源带 kw）
 print("\n搜索关键字 TOP:")
 kws = collections.Counter(
-    (((r['ref'].removeprefix('www.').split('.')[0]) if r['ref'] else '?'), r['kw'])
+    (_eng(r['ref']), r['kw'])
     for r in rows if r['kw']
 )
 if kws:
