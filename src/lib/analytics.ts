@@ -40,7 +40,25 @@ export function trackPageView(path: string): void {
   const uid = visitorId();
   if (!uid) return;
   // 手动拼接，避免 URLSearchParams 把路径里的 / 编码成 %2F
-  const q = `uid=${encodeURIComponent(uid)}&p=${path}`;
+  // ref 记录访问来源域名；kw 提取搜索引擎关键字（google/bing→q, baidu→wd, sogou→query, yandex→text）
+  let ref = '';
+  let kw = '';
+  try {
+    const ru = new URL(document.referrer);
+    ref = ru.hostname;
+    const h = ru.hostname.toLowerCase();
+    const sp = ru.searchParams;
+    if (h.includes('google')) kw = sp.get('q') ?? '';
+    else if (h.includes('bing')) kw = sp.get('q') ?? '';
+    else if (h.includes('baidu')) kw = sp.get('wd') ?? '';
+    else if (h.includes('sogou')) kw = sp.get('query') ?? '';
+    else if (h.includes('yandex')) kw = sp.get('text') ?? '';
+  } catch {
+    // referrer 不可解析（非 http 来源等）——保持为空
+  }
+  const q =
+    `uid=${encodeURIComponent(uid)}&p=${path}` +
+    `&ref=${encodeURIComponent(ref)}&kw=${encodeURIComponent(kw)}`;
   // sendBeacon 在页面卸载时也能可靠送达，且不阻塞
   const ok = navigator.sendBeacon(`/__stats?${q}`);
   if (!ok) {

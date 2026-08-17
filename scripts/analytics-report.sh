@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # GoNavi 自建统计汇总脚本
 # 用法: analytics-report.sh [天数]
-# 兼容日志格式：旧4列(time|uid|p|ua)、7列(time|uid|act|p|file|plat|ua)、8列(time|uid|act|p|file|plat|ref|ua)
-# PV=页面浏览, UV=独立访客(按uid), 下载=act=download, 来源=ref, 转化率=下载/下载页浏览
+# 兼容日志格式：旧4列(time|uid|p|ua)、7列(time|uid|act|p|file|plat|ua)、8列(+ref)、9列(+kw)
+# PV=页面浏览, UV=独立访客(按uid), 下载=act=download, 来源=ref, 搜索关键字=kw, 转化率=下载/下载页浏览
 set -euo pipefail
 
 LOG=/var/log/nginx/gonavi-stats.log
@@ -40,21 +40,22 @@ for ln in open(log, encoding='utf-8', errors='replace'):
     ln = ln.rstrip('\n')
     if not ln: continue
     parts = ln.split('\t')
-    # 兼容: 4列(time|uid|p|ua) 7列(+act/file/plat) 8列(+ref)
+    # 兼容: 4列(time|uid|p|ua) 7列(+act/file/plat) 8列(+ref) 9列(+kw)
     if len(parts) < 3: continue
     ts, uid = parts[0], parts[1]
     if len(parts) >= 8:
-        # 新8列: time|uid|act|p|file|plat|ref|ua （act 可能为空）
+        # 新8/9列: time|uid|act|p|file|plat|ref|[kw]|ua （act 可能为空）
         act = 'download' if parts[2] == 'download' else ''
         p   = parts[3]
         file= parts[4]
         plat= parts[5]
         ref = dec(parts[6])
+        kw  = dec(parts[7]) if len(parts) >= 9 else ''
     else:
         # 旧4列: time|uid|p|ua
         act, p = '', parts[2]
-        file = plat = ref = ''
-    rows.append(dict(ts=ts, uid=uid, act=act, p=p, file=file, plat=plat, ref=ref))
+        file = plat = ref = kw = ''
+    rows.append(dict(ts=ts, uid=uid, act=act, p=p, file=file, plat=plat, ref=ref, kw=kw))
 
 total = len(rows)
 uv = len(set(r['uid'] for r in rows if r['uid']))
@@ -85,6 +86,18 @@ print("\n访问来源 TOP:")
 refs = collections.Counter(r['ref'] or '(直接访问)' for r in rows)
 for ref, c in refs.most_common(12):
     print(f"  {c:4d}  {ref}")
+
+# 搜索关键字（仅搜索引擎来源带 kw）
+print("\n搜索关键字 TOP:")
+kws = collections.Counter(
+    (((r['ref'].removeprefix('www.').split('.')[0]) if r['ref'] else '?'), r['kw'])
+    for r in rows if r['kw']
+)
+if kws:
+    for (eng, kw), c in kws.most_common(15):
+        print(f"  {c:4d}  {eng} · {kw}")
+else:
+    print("  （暂无，等待搜索引擎流量）")
 
 # 页面 TOP
 print("\n页面浏览 TOP:")
