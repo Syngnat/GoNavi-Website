@@ -90,12 +90,14 @@ uv = len(set(r['uid'] for r in rows if r['uid']))
 dl = sum(1 for r in rows if r['act'] == 'download')
 # 下载页浏览（/download 相关页面）
 dl_page = sum(1 for r in rows if r['act'] != 'download' and '/download' in r['p'])
+dl_uid = len({r['uid'] for r in rows if r['act'] == 'download'})
+dl_page_uid = len({r['uid'] for r in rows if r['act'] != 'download' and '/download' in r['p']})
 
 print(f"\n总页面浏览(PV): {total}")
 print(f"独立访客(UV)  : {uv}")
-print(f"下载触发量     : {dl}")
-if dl_page:
-    print(f"下载转化率     : {dl}/{dl_page} = {dl*100/dl_page:.1f}%")
+print(f"下载触发量     : {dl} 次（{dl_uid} 人下载）")
+if dl_page_uid:
+    print(f"下载转化率     : {dl_uid}/{dl_page_uid} = {dl_uid*100/dl_page_uid:.1f}%（按人数口径）")
 print("=")
 
 # 每日
