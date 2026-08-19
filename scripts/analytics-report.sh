@@ -112,10 +112,16 @@ for d in sorted(set(daily_pv) | set(daily_uv) | set(daily_dl)):
     print(f"  {d}  PV={daily_pv[d]}  UV={len(daily_uv.get(d,set()))}  下载={daily_dl[d]}")
 
 # 访问来源
-print("\n访问来源 TOP:")
-refs = collections.Counter(r['ref'] or '(直接访问)' for r in rows)
+# 访问来源（剔除站内跳转：ref 为本站域名时算站内浏览，不算外部入口）
+SITE_DOMAIN = "gonavi.org"
+print("\n访问来源 TOP（外部入口，站内跳转已剔除）:")
+external = [r for r in rows if (r['ref'] or '') != SITE_DOMAIN]
+internal_cnt = sum(1 for r in rows if r['ref'] == SITE_DOMAIN)
+refs = collections.Counter((r['ref'] or '(直接访问)') if r['ref'] and r['ref'] != '-' else '(直接访问)' for r in external)
 for ref, c in refs.most_common(12):
     print(f"  {c:4d}  {ref}")
+if internal_cnt:
+    print(f"  {internal_cnt:4d}  (站内跳转 {SITE_DOMAIN})")
 
 # 搜索关键字（仅搜索引擎来源带 kw）
 print("\n搜索关键字 TOP:")
