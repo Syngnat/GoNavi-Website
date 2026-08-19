@@ -12,24 +12,33 @@ if [ ! -f "$LOG" ]; then
   exit 1
 fi
 
-tmp="$LOG"
-if [ -n "$days" ]; then
-  since=$(date -d "-${days} days" '+%Y-%m-%dT%H:%M:%S')
-  tmp=$(mktemp)
-  awk -F'\t' -v s="$since" '$1 >= s' "$LOG" > "$tmp"
+if [ -n "$days" ] && ! [[ "$days" =~ ^[0-9]+$ ]]; then
+  echo "天数必须是非负整数" >&2
+  exit 2
 fi
 
-cleanup() { [ -n "$days" ] && rm -f "$tmp"; }
-trap cleanup EXIT
-
 echo "=========================================="
-echo " GoNavi 网站统计 ($(date '+%Y-%m-%d %H:%M'))"
+echo " GoNavi 网站统计 ($(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M'))"
 echo "=========================================="
 
-python3 - "$tmp" <<'PY'
+python3 - "$LOG" "$days" <<'PY'
 import sys, collections, urllib.parse
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
-log = sys.argv[1]
+log, days_arg = sys.argv[1], sys.argv[2]
+CN_TZ = ZoneInfo("Asia/Shanghai")
+now = datetime.now(CN_TZ)
+cutoff = now - timedelta(days=int(days_arg)) if days_arg else None
+
+def _cn_time(ts: str):
+    try:
+        parsed = datetime.fromisoformat(ts)
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=CN_TZ)
+        return parsed.astimezone(CN_TZ)
+    except ValueError:
+        return None
 
 
 def _eng(ref: str) -> str:
@@ -45,13 +54,23 @@ def dec(x):
     except: return x
 
 rows = []
-for ln in open(log, encoding='utf-8', errors='replace'):
+def _read_lines(path):
+    try:
+        with open(path, encoding='utf-8', errors='replace') as f:
+            return f.readlines()
+    except Exception:
+        return []
+for ln in _read_lines(log) + _read_lines(log + '.1'):  # 兼容 logrotate 轮转文件
     ln = ln.rstrip('\n')
     if not ln: continue
     parts = ln.split('\t')
     # 兼容: 4列(time|uid|p|ua) 7列(+act/file/plat) 8列(+ref) 9列(+kw)
     if len(parts) < 3: continue
     ts, uid = parts[0], parts[1]
+    cn_time = _cn_time(ts)
+    if cutoff and (cn_time is None or cn_time < cutoff):
+        continue
+    day = cn_time.date().isoformat() if cn_time else ts[:10]
     if len(parts) >= 8:
         # 新8/9列: time|uid|act|p|file|plat|ref|[kw]|ua （act 可能为空）
         act = 'download' if parts[2] == 'download' else ''
@@ -64,7 +83,7 @@ for ln in open(log, encoding='utf-8', errors='replace'):
         # 旧4列: time|uid|p|ua
         act, p = '', parts[2]
         file = plat = ref = kw = ''
-    rows.append(dict(ts=ts, uid=uid, act=act, p=p, file=file, plat=plat, ref=ref, kw=kw))
+    rows.append(dict(ts=ts, day=day, uid=uid, act=act, p=p, file=file, plat=plat, ref=ref, kw=kw))
 
 total = len(rows)
 uv = len(set(r['uid'] for r in rows if r['uid']))
@@ -83,7 +102,7 @@ print("=")
 print("\n每日 PV / UV / 下载:")
 daily_pv, daily_uv, daily_dl = collections.Counter(), {}, collections.Counter()
 for r in rows:
-    d = r['ts'][:10]
+    d = r['day']
     daily_pv[d] += 1
     daily_uv.setdefault(d, set()).add(r['uid'])
     if r['act'] == 'download': daily_dl[d] += 1
