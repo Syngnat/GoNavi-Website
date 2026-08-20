@@ -123,11 +123,11 @@ for ref, c in refs.most_common(12):
 if internal_cnt:
     print(f"  {internal_cnt:4d}  (站内跳转 {SITE_DOMAIN})")
 
-# 搜索关键字（仅搜索引擎来源带 kw）
+# 搜索关键字（仅搜索引擎来源带 kw；只统计页面浏览，下载动作不计入）
 print("\n搜索关键字 TOP:")
 kws = collections.Counter(
     (_eng(r['ref']), r['kw'])
-    for r in rows if r['kw']
+    for r in rows if r['kw'] and r['kw'] != '-' and r['act'] != 'download'
 )
 if kws:
     for (eng, kw), c in kws.most_common(15):
