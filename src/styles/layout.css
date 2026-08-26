@@ -959,7 +959,8 @@
 
 .site-footer {
   border-top: 1px solid var(--separator);
-  padding: var(--space-12) 0 var(--space-8);
+  /* 底部安全区：避免手机手势条遮挡页脚内容 */
+  padding: var(--space-12) 0 calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
 }
 
 .site-footer__inner {
@@ -1151,6 +1152,38 @@
     width: min(calc(100% - var(--space-5)), var(--content-width));
   }
 
+  .site-header {
+    height: auto;
+  }
+
+  .site-header__inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: var(--space-3) 0;
+    gap: var(--space-2);
+  }
+
+  /* 导航单独占一行，放不下时横向滚动（不挤压、不截断） */
+  .site-nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    min-width: 0;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .site-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-nav__link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
   .site-header__meta {
     gap: var(--space-1);
   }
@@ -1160,6 +1193,19 @@
   .site-header__external {
     padding: 0 var(--space-2);
     font-size: 13px;
+  }
+
+  /* 首屏间距压缩：hero 底部不再留 96px 大空白 */
+  .home-section-wrap--hero {
+    padding: var(--space-10) 0 var(--space-8);
+  }
+
+  .home-hero {
+    padding-top: var(--space-6);
+  }
+
+  .sponsor-section {
+    padding-bottom: var(--space-12);
   }
 
   .home-hero__title {
@@ -2393,7 +2439,8 @@ a.docs-pager__item:hover {
    ============================================ */
 
 .sponsor-section {
-  padding: 0 0 var(--space-20);
+  /* 底部安全区：避免手机手势条遮挡赞助商内容 */
+  padding: 0 0 calc(var(--space-20) + env(safe-area-inset-bottom, 0px));
 }
 
 .sponsor-section__label {
@@ -2572,8 +2619,8 @@ a.docs-pager__item:hover {
 @media (max-width: 760px) {
   .sponsor-banner {
     grid-template-columns: 1fr;
-    gap: var(--space-5);
-    padding: var(--space-6);
+    gap: var(--space-4);
+    padding: var(--space-5);
   }
 
   .sponsor-banner__brand::after {
@@ -2587,6 +2634,15 @@ a.docs-pager__item:hover {
   .sponsor-banner__logo--hualong {
     width: 116px;
     height: 88px;
+  }
+
+  .sponsor-banner__logo--apismart {
+    width: min(100%, 132px);
+  }
+
+  /* 桌面端用 translateY(-33%) 补偿 logo 内边距，移动端视觉反而偏空，去掉 */
+  .sponsor-banner__logo--apismart img {
+    transform: none;
   }
 }
 
