@@ -7,11 +7,29 @@ repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 release_root=${GONAVI_RELEASE_ROOT:-/srv/gonavi-website}
 releases_dir="$release_root/releases"
 current_link="$release_root/current"
+sponsor_config_path=${GONAVI_SPONSOR_CONFIG_PATH:-$release_root/runtime/sponsor-config.json}
 
 source_revision=$(git -C "$repo_dir" rev-parse --short=12 HEAD)
 if [ -n "$(git -C "$repo_dir" status --porcelain)" ]; then
   source_revision="${source_revision}-dirty"
 fi
+
+# The sponsor controls live outside immutable releases, so changing an
+# individual campaign never requires rebuilding or re-publishing the website.
+install -d -m 755 "$(dirname "$sponsor_config_path")"
+if [ ! -f "$sponsor_config_path" ]; then
+  install -m 644 "$repo_dir/public/sponsor-config.json" "$sponsor_config_path"
+fi
+install -m 755 "$repo_dir/scripts/set-sponsor-status.sh" "$release_root/set-sponsor-status.sh"
+
+# Keep the Hermes daily website report in sync when this deployment runs on the
+# production host. Other environments do not need Hermes and simply skip it.
+hermes_report_script=${HERMES_DAILY_STATS_SCRIPT:-/root/.hermes/scripts/gonavi_daily_stats.py}
+if [ -d "$(dirname "$hermes_report_script")" ]; then
+  install -m 755 "$repo_dir/scripts/gonavi-daily-stats.py" "$hermes_report_script"
+  install -m 755 "$repo_dir/scripts/gonavi-weekly-stats.py" "$(dirname "$hermes_report_script")/gonavi_weekly_stats.py"
+fi
+
 release_id="${source_revision}-$(date -u +%Y%m%dT%H%M%SZ)"
 release_dir="$releases_dir/$release_id"
 staging_dir="$release_root/.staging-$release_id"
@@ -51,6 +69,7 @@ DOCKER_BUILDKIT=1 docker build \
   --output "type=local,dest=$staging_dir" \
   "$repo_dir"
 
+ln -sfn "$sponsor_config_path" "$staging_dir/sponsor-config.json"
 test -f "$staging_dir/index.html"
 test -f "$staging_dir/zh/index.html"
 find "$staging_dir" -type d -exec chmod 755 {} +
