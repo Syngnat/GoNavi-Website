@@ -39,3 +39,12 @@ Install and enable via the Driver Manager:
 - Vector DB: collection browsing, vector search, scalar/metadata filtering
 - Message Queue: topic / queue / exchange browsing, consumer-group inspection
 - Domestic DB: PostgreSQL / MySQL-compatible schema browsing and query workflow
+
+## Guides by data source
+
+- [PostgreSQL client](/en/docs/postgresql-client/): connection, browsing, querying, and delivery workflows.
+- [MySQL client](/en/docs/mysql-client/): a desktop workflow for daily development and investigation.
+- [Redis client](/en/docs/redis-client/): key browsing, command execution, and value inspection.
+- [Kafka browsing](/en/docs/kafka-browser/): topic browsing and consumer-group inspection.
+- [ClickHouse client](/en/docs/clickhouse-client/): connect columnar analytics through the optional driver agent.
+- [Multi-database workbench](/en/docs/database-workbench/): see how these connections fit into one desktop workspace.

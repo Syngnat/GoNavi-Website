@@ -5,8 +5,8 @@ import '../styles/layout.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import type { Locale } from '../lib/i18n';
-import { withLocale } from '../lib/i18n';
-import { isAnalyticsEnabled, trackPageView } from '../lib/analytics';
+import { GITHUB_URL, stripLocale, withLocale } from '../lib/i18n';
+import { isAnalyticsEnabled } from '../lib/analytics';
 
 interface Props {
   locale: Locale;
@@ -18,7 +18,57 @@ interface Props {
 
 const { locale, title, description, current = '/' } = Astro.props;
 const siteTitle = title ? `${title} · GoNavi` : 'GoNavi — Navigate every data source';
-const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:4173');
+const siteUrl = Astro.site ?? new URL('http://localhost:4173');
+const canonical = new URL(Astro.url.pathname, siteUrl);
+const routePath = stripLocale(Astro.url.pathname);
+const zhAlternate = new URL(withLocale('zh', routePath), siteUrl);
+const enAlternate = new URL(withLocale('en', routePath), siteUrl);
+const socialImage = new URL('/screenshots/01-home-workbench.png', siteUrl);
+const localeTag = locale === 'zh' ? 'zh_CN' : 'en_US';
+const alternateLocaleTag = locale === 'zh' ? 'en_US' : 'zh_CN';
+const socialImageAlt = locale === 'zh' ? 'GoNavi 数据库工作台界面' : 'GoNavi database workbench interface';
+const structuredData = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': new URL('/#organization', siteUrl).href,
+      name: 'GoNavi',
+      url: new URL('/', siteUrl).href,
+      logo: new URL('/logo.webp', siteUrl).href,
+      sameAs: [GITHUB_URL],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': new URL('/#website', siteUrl).href,
+      name: 'GoNavi',
+      url: new URL('/', siteUrl).href,
+      publisher: { '@id': new URL('/#organization', siteUrl).href },
+      inLanguage: locale === 'zh' ? 'zh-CN' : 'en-US',
+    },
+    {
+      '@type': 'WebPage',
+      '@id': canonical.href,
+      name: siteTitle,
+      url: canonical.href,
+      description,
+      inLanguage: locale === 'zh' ? 'zh-CN' : 'en-US',
+      isPartOf: { '@id': new URL('/#website', siteUrl).href },
+      ...(current === '/' ? { mainEntity: { '@id': new URL('/#software', siteUrl).href } } : {}),
+    },
+    ...(current === '/' ? [{
+      '@type': 'SoftwareApplication',
+      '@id': new URL('/#software', siteUrl).href,
+      name: 'GoNavi',
+      applicationCategory: 'DeveloperApplication',
+      description,
+      url: canonical.href,
+      image: socialImage.href,
+      inLanguage: locale === 'zh' ? 'zh-CN' : 'en-US',
+      publisher: { '@id': new URL('/#organization', siteUrl).href },
+    }] : []),
+  ],
+}).replace(/</g, '\\u003c');
 ---
 <!doctype html>
 <html lang={locale === 'zh' ? 'zh-CN' : 'en-US'}>
@@ -28,38 +78,33 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:41
     <title>{siteTitle}</title>
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="zh-CN" href={zhAlternate} />
+    <link rel="alternate" hreflang="en-US" href={enAlternate} />
+    <link rel="alternate" hreflang="x-default" href={zhAlternate} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="icon" type="image/webp" href="/logo.webp?v=20260731" sizes="512x512" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="GoNavi" />
+    <meta property="og:locale" content={localeTag} />
+    <meta property="og:locale:alternate" content={alternateLocaleTag} />
     <meta property="og:title" content={siteTitle} />
     {description && <meta property="og:description" content={description} />}
-    <meta property="og:image" content="/og-cover.svg" />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1440" />
+    <meta property="og:image:height" content="900" />
+    <meta property="og:image:alt" content={socialImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={siteTitle} />
+    {description && <meta name="twitter:description" content={description} />}
+    <meta name="twitter:image" content={socialImage} />
+    <meta name="twitter:image:alt" content={socialImageAlt} />
+    <script type="application/ld+json" set:html={structuredData}></script>
     {isAnalyticsEnabled && (
-      <script is:inline>
-        (function () {
-          const p = location.pathname.replace(/\/+$/, '') || '/index';
-          const key = 'gonavi_uid_v1';
-          let uid = null;
-          try {
-            uid = localStorage.getItem(key);
-            if (!uid) {
-              uid = 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-              localStorage.setItem(key, uid);
-            }
-          } catch (e) {}
-          if (uid) {
-            // 手动拼接，避免 URLSearchParams 把路径里的 / 编码成 %2F
-            // ref 记录访问来源域名（仅 hostname）。浏览器 referrer policy（strict-origin-when-cross-origin）
-            // 会剥掉跨站跳转的查询串，搜索关键字已无法获取，故不再上报 kw。
-            var ref = '';
-            try {
-              ref = new URL(document.referrer).hostname;
-            } catch (e) {}
-            var q = 'uid=' + encodeURIComponent(uid) + '&p=' + p + '&ref=' + encodeURIComponent(ref);
-            var ok = navigator.sendBeacon('/__stats?' + q);
-            if (!ok) {
-              fetch('/__stats?' + q, { method: 'GET', keepalive: true }).catch(function () {});
-            }
-          }
-        })();
+      <script>
+        import { trackPageView } from '../lib/analytics-client';
+
+        trackPageView();
       </script>
     )}
   </head>

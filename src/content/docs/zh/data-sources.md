@@ -39,3 +39,12 @@ GoNavi 把关系型、缓存、向量库、消息队列、搜索、时序与国�
 - 向量库：Collection 浏览、向量检索、标量/元数据过滤
 - 消息队列：Topic / Queue / Exchange 浏览、消费组检查
 - 国产库：类 PostgreSQL / MySQL 兼容的库表浏览与查询工作流
+
+## 按数据源查看使用指南
+
+- [PostgreSQL 客户端](/zh/docs/postgresql-client/)：连接、浏览、查询与数据交付工作流。
+- [MySQL 客户端](/zh/docs/mysql-client/)：面向日常开发和排查的桌面数据库工作流。
+- [Redis 客户端](/zh/docs/redis-client/)：Key 浏览、命令执行与值查看。
+- [Kafka 浏览器](/zh/docs/kafka-browser/)：Topic 浏览与消费组检查。
+- [ClickHouse 客户端](/zh/docs/clickhouse-client/)：通过可选驱动接入列式分析场景。
+- [多数据源工作台](/zh/docs/database-workbench/)：了解如何把这些连接放进同一个桌面工作区。
