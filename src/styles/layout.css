@@ -1161,16 +1161,29 @@
     height: auto;
     padding: var(--space-3) 0;
     gap: var(--space-2);
+    justify-content: flex-start;
   }
 
-  /* 第二行：导航自适应收缩横向滚动，右侧固定语言切换和 GitHub 数据 */
+  /* 移动端隐藏品牌副标题：EN 的 "Database workbench" 太宽会撑爆单行 */
+  .site-brand__tag {
+    display: none;
+  }
+
+  /* 品牌左、语言/GitHub 右，同一行两端分布 */
+  .site-brand {
+    margin-right: auto;
+  }
+
+  /* meta 拆盒：语言切换/GitHub/导航直接参与 header 排布，两行定稿 */
   .site-header__meta {
-    flex-basis: 100%;
-    min-width: 0;
+    display: contents;
   }
 
+  /* 导航独占一行，放不下时横向滚动（中英文都适用） */
   .site-nav {
-    flex: 1 1 auto;
+    order: 2;
+    flex-basis: 100%;
+    justify-content: flex-start;
     min-width: 0;
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -1190,6 +1203,29 @@
   .locale-switch,
   .site-header__external {
     flex-shrink: 0;
+  }
+
+  /* 整页纵向压缩：各区块 96px 上下间距减到 40px */
+  .home-section-wrap {
+    padding: var(--space-10) 0;
+  }
+
+  .home-section-wrap--compact {
+    padding: var(--space-8) 0;
+  }
+
+  /* 页脚收紧 */
+  .site-footer__inner {
+    gap: var(--space-6);
+  }
+
+  .site-footer__group {
+    gap: var(--space-2);
+  }
+
+  .site-footer__telegram img {
+    width: 72px;
+    height: 72px;
   }
 
   .site-nav__link,
@@ -1262,6 +1298,13 @@
 
   .site-footer__bottom {
     margin-top: var(--space-6);
+  }
+}
+
+/* 超窄屏（360px 档位）：隐藏 GitHub 下载计数，保证品牌+语言+星标单行放下 */
+@media (max-width: 380px) {
+  .site-header__gh-downloads {
+    display: none;
   }
 }
 
