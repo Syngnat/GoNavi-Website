@@ -1163,11 +1163,14 @@
     gap: var(--space-2);
   }
 
-  /* 导航单独占一行，放不下时横向滚动（不挤压、不截断） */
-  .site-nav {
-    order: 3;
+  /* 第二行：导航自适应收缩横向滚动，右侧固定语言切换和 GitHub 数据 */
+  .site-header__meta {
     flex-basis: 100%;
-    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .site-nav {
+    flex: 1 1 auto;
     min-width: 0;
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -1184,8 +1187,9 @@
     white-space: nowrap;
   }
 
-  .site-header__meta {
-    gap: var(--space-1);
+  .locale-switch,
+  .site-header__external {
+    flex-shrink: 0;
   }
 
   .site-nav__link,
@@ -1250,8 +1254,14 @@
   }
 
   .site-footer__links {
-    flex-direction: column;
+    /* 2 列网格替代单列堆叠：填满宽度、消除右侧大空白 */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-6);
+  }
+
+  .site-footer__bottom {
+    margin-top: var(--space-6);
   }
 }
 
