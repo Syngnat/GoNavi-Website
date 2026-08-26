@@ -20,21 +20,27 @@ if (!entry) throw new Error(`Missing roadmap content for locale: ${locale}`);
 
 const { title, description, lanes } = entry.data;
 const eyebrow = locale === 'zh' ? '公开路线图' : 'Public roadmap';
+const displayTitle = locale === 'en' ? title.replace(' — ', '\u00A0— ') : title;
 ---
 <BaseLayout locale={locale} title={title} description={description} current="/roadmap">
-  <div class="site-shell__inner page-wrap">
-    <section class="content-panel">
-      <p class="content-panel__eyebrow">{eyebrow}</p>
-      <h1 class="content-panel__title">{title}</h1>
-      <p class="content-panel__copy">{description}</p>
+  <div class="site-shell__inner page-wrap roadmap-page">
+    <section class="roadmap-intro" aria-labelledby="roadmap-title">
+      <div class="roadmap-intro__heading">
+        <p class="roadmap-intro__eyebrow">{eyebrow}</p>
+        <h1 id="roadmap-title" class="roadmap-intro__title">{displayTitle}</h1>
+      </div>
+      <p class="roadmap-intro__copy">{description}</p>
     </section>
 
-    <section class="roadmap-columns">
+    <section class="roadmap-board" aria-label={title}>
       {lanes.map((lane) => (
-        <article class="roadmap-column">
-          <p class="section-eyebrow">{lane.title}</p>
-          <ul class="roadmap-column__list">
-            {lane.items.map((item) => <li class="roadmap-column__item">{item}</li>)}
+        <article class="roadmap-lane">
+          <header class="roadmap-lane__header">
+            <span class="roadmap-lane__signal" aria-hidden="true"></span>
+            <h2 class="roadmap-lane__title">{lane.title}</h2>
+          </header>
+          <ul class="roadmap-lane__list">
+            {lane.items.map((item) => <li class="roadmap-lane__item">{item}</li>)}
           </ul>
         </article>
       ))}

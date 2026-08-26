@@ -1,0 +1,280 @@
+---
+import type { Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = locale === 'zh'
+  ? {
+      label: '本期赞助商',
+      previous: '显示上一位赞助商',
+      next: '显示下一位赞助商',
+      announcement: (name: string, current: number, total: number) => `正在显示 ${name}，第 ${current} 位，共 ${total} 位赞助商。`,
+      sponsors: [
+        {
+          id: 'apismart',
+          name: 'APISmart',
+          description: 'APISmart 通过一个 API 提供对主流 AI 模型的统一访问。开发者只需一个 API Key，即可通过兼容 OpenAI 的接口接入大语言模型、图像和视频模型，无需分别管理多个服务商。智能路由与自动故障切换有助于提升可靠性，集中式账单使使用管理更加轻松。借助 APISmart，开发者能以更精简的平台更快构建并扩展 AI 应用。',
+          action: '访问官网',
+          newWindow: '在新窗口打开 APISmart',
+          href: 'https://www.apismart.ai/',
+          logo: '/apismart-logo.png',
+          logoAlt: 'APISmart',
+          logoStyle: 'apismart',
+        },
+        {
+          id: 'hualong',
+          name: '华龙中转站',
+          description: 'HuaLongAI 是一家面向重度 AI 开发者、专注官方直连的高品质模型 API 中转服务商。主要营业 Codex 系列模型，100% 官方源直供，不掺假不注水，欢迎检验。计费透明，Token 级账单可逐笔核验。同时支持企业级高并发，并为企业客户提供专业的管理平台；企业客户可签订正式合同并开具发票，更多详情请进入官网获取联系方式。GPT 系列最低至 0.08 倍率，更有 0.15 倍率的 Pro 稳定分组；邀请好友双向赠送，邀请奖励无上限。',
+          action: '访问官网',
+          newWindow: '在新窗口打开华龙中转站',
+          href: 'https://api.hualong.online/',
+          logo: '/hualong-logo.jpg',
+          logoAlt: '华龙中转站',
+          logoStyle: 'hualong',
+        },
+      ],
+    }
+  : {
+      label: 'Current sponsors',
+      previous: 'Show previous sponsor',
+      next: 'Show next sponsor',
+      announcement: (name: string, current: number, total: number) => `Now showing ${name}, sponsor ${current} of ${total}.`,
+      sponsors: [
+        {
+          id: 'apismart',
+          name: 'APISmart',
+          description: 'APISmart provides unified access to leading AI models through a single API. Developers can connect to LLM, image, and video models using one API key and an OpenAI-compatible interface. This eliminates the need to manage multiple providers separately. Intelligent routing and automatic failover help improve reliability, while centralized billing makes usage easier to manage. With APISmart, developers can build and scale AI applications faster through one streamlined platform.',
+          action: 'Visit website',
+          newWindow: 'Open APISmart in a new window',
+          href: 'https://www.apismart.ai/',
+          logo: '/apismart-logo.png',
+          logoAlt: 'APISmart',
+          logoStyle: 'apismart',
+        },
+        {
+          id: 'hualong',
+          name: 'HuaLongAI',
+          description: 'HuaLongAI is a premium model API relay provider for power AI developers, focused on official direct connectivity. It primarily offers Codex-series models supplied directly from official sources, with no substitutions or dilution, and invites verification. Billing is transparent, with token-level itemized records available for review. It supports enterprise-grade high concurrency and provides enterprise customers with a professional management platform, formal contracts, and invoices; visit the website for contact details. GPT-series models start at a 0.08 rate, with a stable Pro group at 0.15, two-way referral gifts, and uncapped referral rewards.',
+          action: 'Visit website',
+          newWindow: 'Open HuaLongAI in a new window',
+          href: 'https://api.hualong.online/',
+          logo: '/hualong-logo.jpg',
+          logoAlt: 'HuaLongAI',
+          logoStyle: 'hualong',
+        },
+      ],
+    };
+---
+
+<aside
+  class="sponsor-section"
+  data-sponsor-carousel
+  data-interval="8000"
+  data-sponsor-locale={locale}
+  data-sponsor-config-url="/sponsor-config.json"
+  aria-labelledby="sponsor-title"
+  hidden
+>
+    <div class="site-shell__inner">
+      <p id="sponsor-title" class="sponsor-section__label">{copy.label}</p>
+
+      <div class="sponsor-carousel">
+        {copy.sponsors.map((sponsor, index) => (
+          <article
+            class="sponsor-banner"
+            data-sponsor-slide
+            data-sponsor-name={sponsor.name}
+            data-sponsor-id={sponsor.id}
+            hidden={index !== 0}
+            aria-hidden={index !== 0 ? 'true' : 'false'}
+          >
+            <div class={`sponsor-banner__brand sponsor-banner__brand--${sponsor.logoStyle}`}>
+              <div class={`sponsor-banner__logo sponsor-banner__logo--${sponsor.logoStyle}`}>
+                <img src={sponsor.logo} alt={sponsor.logoAlt} width="512" height="512" />
+              </div>
+            </div>
+
+            <p class="sponsor-banner__description">{sponsor.description}</p>
+
+            <a
+              class="sponsor-banner__action"
+              href={sponsor.href}
+              data-sponsor-action
+              data-sponsor-id={sponsor.id}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+              aria-label={sponsor.newWindow}
+            >
+              {sponsor.action}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7 17L17 7M17 7H7M17 7V17" />
+              </svg>
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <div class="sponsor-carousel__navigation" data-sponsor-navigation aria-label={copy.label} hidden>
+        <button type="button" class="sponsor-carousel__button" data-sponsor-previous aria-label={copy.previous}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18L9 12L15 6" />
+          </svg>
+        </button>
+        <span class="sponsor-carousel__counter" data-sponsor-counter aria-hidden="true">1 / {copy.sponsors.length}</span>
+        <button type="button" class="sponsor-carousel__button" data-sponsor-next aria-label={copy.next}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 18L15 12L9 6" />
+          </svg>
+        </button>
+      </div>
+      <p class="sponsor-carousel__sr-only" data-sponsor-status aria-live="polite"></p>
+    </div>
+</aside>
+
+<script>
+  import { trackSponsorClick, trackSponsorImpression } from '../lib/analytics-client';
+
+  document.querySelectorAll('[data-sponsor-carousel]').forEach((root) => {
+    const carousel = root.querySelector('.sponsor-carousel');
+    const allSlides = Array.from(root.querySelectorAll('[data-sponsor-slide]'));
+    let slides = [];
+    const previous = root.querySelector('[data-sponsor-previous]');
+    const next = root.querySelector('[data-sponsor-next]');
+    const counter = root.querySelector('[data-sponsor-counter]');
+    const status = root.querySelector('[data-sponsor-status]');
+    const navigation = root.querySelector('[data-sponsor-navigation]');
+    const configUrl = root.dataset.sponsorConfigUrl || '/sponsor-config.json';
+    const locale = root.dataset.sponsorLocale;
+    const interval = Number.parseInt(root.dataset.interval || '8000', 10);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let activeIndex = 0;
+    let hasEnteredViewport = false;
+    let timer;
+    const recordedImpressions = new Set();
+
+    const campaignDay = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+
+    const isSponsorActive = (control) => Boolean(
+      control
+      && control.enabled === true
+      && (!control.startsOn || control.startsOn <= campaignDay)
+      && (!control.endsOn || campaignDay <= control.endsOn),
+    );
+
+    const trackActiveSponsorImpression = () => {
+      const slide = slides[activeIndex];
+      const sponsorId = slide?.dataset.sponsorId;
+
+      if (!sponsorId || recordedImpressions.has(sponsorId)) return;
+      recordedImpressions.add(sponsorId);
+      trackSponsorImpression(sponsorId);
+    };
+
+    const show = (nextIndex, announce = false) => {
+      activeIndex = (nextIndex + slides.length) % slides.length;
+      slides.forEach((slide, index) => {
+        const isActive = index === activeIndex;
+        slide.hidden = !isActive;
+        slide.setAttribute('aria-hidden', String(!isActive));
+      });
+      if (counter) counter.textContent = `${activeIndex + 1} / ${slides.length}`;
+      if (announce && status) {
+        const sponsorName = slides[activeIndex]?.dataset.sponsorName || '';
+        status.textContent = locale === 'zh'
+          ? `正在显示 ${sponsorName}，第 ${activeIndex + 1} 位，共 ${slides.length} 位赞助商。`
+          : `Now showing ${sponsorName}, sponsor ${activeIndex + 1} of ${slides.length}.`;
+      }
+      if (hasEnteredViewport) trackActiveSponsorImpression();
+    };
+
+    const stop = () => {
+      window.clearInterval(timer);
+      timer = undefined;
+    };
+
+    const start = () => {
+      stop();
+      if (hasEnteredViewport && !reducedMotion && document.visibilityState === 'visible' && slides.length > 1) {
+        timer = window.setInterval(() => show(activeIndex + 1), interval);
+      }
+    };
+
+    const initialise = async () => {
+      // The query token also bypasses intermediary caches that may ignore a
+      // browser's Cache-Control request header. The JSON itself remains the
+      // single mutable, runtime source of truth for campaign availability.
+      const separator = configUrl.includes('?') ? '&' : '?';
+      const response = await fetch(`${configUrl}${separator}_=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Unable to load sponsor configuration: ${response.status}`);
+
+      const config = await response.json();
+      const controls = config?.sponsors || {};
+      slides = allSlides
+        .filter((slide) => isSponsorActive(controls[slide.dataset.sponsorId]))
+        .sort((left, right) => (controls[left.dataset.sponsorId]?.weight ?? 100) - (controls[right.dataset.sponsorId]?.weight ?? 100));
+
+      if (slides.length === 0 || !carousel) return;
+
+      // Do not leave an inactive campaign in the DOM: its server-rendered
+      // initial state could otherwise be momentarily visible before show(0).
+      allSlides.forEach((slide) => {
+        if (!slides.includes(slide)) slide.remove();
+      });
+      slides.forEach((slide) => carousel.append(slide));
+      if (navigation) navigation.hidden = slides.length < 2;
+      root.hidden = false;
+      show(0);
+
+      if (previous && next) {
+        previous.addEventListener('click', () => {
+          show(activeIndex - 1, true);
+          start();
+        });
+        next.addEventListener('click', () => {
+          show(activeIndex + 1, true);
+          start();
+        });
+      }
+      slides.forEach((slide) => {
+        slide.querySelector('[data-sponsor-action]')?.addEventListener('click', (event) => {
+          const action = event.currentTarget;
+          trackSponsorClick(action.dataset.sponsorId || '', action.href);
+        });
+      });
+      root.addEventListener('mouseenter', stop);
+      root.addEventListener('mouseleave', start);
+      root.addEventListener('focusin', stop);
+      root.addEventListener('focusout', (event) => {
+        if (!root.contains(event.relatedTarget)) start();
+      });
+      document.addEventListener('visibilitychange', start);
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            hasEnteredViewport = true;
+            observer.disconnect();
+            trackActiveSponsorImpression();
+            start();
+          }
+        }, { threshold: 0.15 });
+
+        observer.observe(root);
+      } else {
+        hasEnteredViewport = true;
+        trackActiveSponsorImpression();
+        start();
+      }
+    };
+
+    initialise().catch(() => {});
+  });
+</script>

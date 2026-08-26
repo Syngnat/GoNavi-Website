@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Hero from '../../components/Hero.astro';
+import SponsorBanner from '../../components/SponsorBanner.astro';
 import FeatureGrid from '../../components/FeatureGrid.astro';
 import ScreenshotWall from '../../components/ScreenshotWall.astro';
 import DatabaseMatrix from '../../components/DatabaseMatrix.astro';
@@ -41,6 +42,7 @@ const statusLabel = { primary: locale === 'zh' ? '内置' : 'Built-in', supporte
     highlights={data.highlights}
   />
 
+  <SponsorBanner locale={locale} />
   <FeatureGrid heading={data.featuresHeading} features={data.features} />
   <ScreenshotWall heading={data.screenshotsHeading} screenshots={data.screenshots} />
   <DatabaseMatrix heading={data.databasesHeading} rows={data.databases} statusLabel={statusLabel} />

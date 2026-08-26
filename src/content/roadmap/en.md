@@ -1,6 +1,6 @@
 ---
-title: Product direction, site evolution, and community collaboration — all in one public plan
-description: This page is not only a feature list. It also acts as a public plan for how the website, product, and community move together.
+title: Product and website roadmap
+description: Follow the work in progress and what comes next for GoNavi.
 locale: en
 lanes:
   - title: In Progress
@@ -13,9 +13,4 @@ lanes:
       - A deeper database capability matrix
       - Platform-aware download recommendations
       - Full docs navigation and search
-  - title: Community
-    items:
-      - GitHub Issues
-      - Release feedback
-      - Contribution and sponsorship entry points
 ---

@@ -1,0 +1,12 @@
+{
+  "sponsors": {
+    "apismart": {
+      "enabled": false,
+      "weight": 0
+    },
+    "hualong": {
+      "enabled": true,
+      "weight": 1
+    }
+  }
+}
