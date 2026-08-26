@@ -20,6 +20,9 @@ install -d -m 755 "$(dirname "$sponsor_config_path")"
 if [ ! -f "$sponsor_config_path" ]; then
   install -m 644 "$repo_dir/public/sponsor-config.json" "$sponsor_config_path"
 fi
+# Nginx worker processes must be able to read this file through the release
+# symlink; an atomic update created by mktemp would otherwise be mode 0600.
+chmod 644 "$sponsor_config_path"
 install -m 755 "$repo_dir/scripts/set-sponsor-status.sh" "$release_root/set-sponsor-status.sh"
 
 # Keep the Hermes daily website report in sync when this deployment runs on the

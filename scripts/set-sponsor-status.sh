@@ -41,6 +41,7 @@ config["sponsors"] = sponsors
 with open(tmp_path, "w", encoding="utf-8") as output_file:
     json.dump(config, output_file, ensure_ascii=False, indent=2)
     output_file.write("\n")
+os.chmod(tmp_path, 0o644)
 os.replace(tmp_path, config_path)
 PY
 
