@@ -40,25 +40,15 @@ export function trackPageView(path: string): void {
   const uid = visitorId();
   if (!uid) return;
   // 手动拼接，避免 URLSearchParams 把路径里的 / 编码成 %2F
-  // ref 记录访问来源域名；kw 提取搜索引擎关键字（google/bing→q, baidu→wd, sogou→query, yandex→text）
+  // ref 记录访问来源域名（仅 hostname）。浏览器 referrer policy（strict-origin-when-cross-origin）
+  // 会剥掉跨站跳转的查询串，搜索关键字已无法获取，故不再上报 kw。
   let ref = '';
-  let kw = '';
   try {
-    const ru = new URL(document.referrer);
-    ref = ru.hostname;
-    const h = ru.hostname.toLowerCase();
-    const sp = ru.searchParams;
-    if (h.includes('google')) kw = sp.get('q') ?? '';
-    else if (h.includes('bing')) kw = sp.get('q') ?? '';
-    else if (h.includes('baidu')) kw = sp.get('wd') ?? '';
-    else if (h.includes('sogou')) kw = sp.get('query') ?? '';
-    else if (h.includes('yandex')) kw = sp.get('text') ?? '';
+    ref = new URL(document.referrer).hostname;
   } catch {
     // referrer 不可解析（非 http 来源等）——保持为空
   }
-  const q =
-    `uid=${encodeURIComponent(uid)}&p=${path}` +
-    `&ref=${encodeURIComponent(ref)}&kw=${encodeURIComponent(kw)}`;
+  const q = `uid=${encodeURIComponent(uid)}&p=${path}&ref=${encodeURIComponent(ref)}`;
   // sendBeacon 在页面卸载时也能可靠送达，且不阻塞
   const ok = navigator.sendBeacon(`/__stats?${q}`);
   if (!ok) {

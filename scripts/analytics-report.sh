@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # GoNavi 自建统计汇总脚本
 # 用法: analytics-report.sh [天数]
-# 兼容日志格式：旧4列(time|uid|p|ua)、7列(time|uid|act|p|file|plat|ua)、8列(+ref)、9列(+kw)
-# PV=页面浏览, UV=独立访客(按uid), 下载=act=download, 来源=ref, 搜索关键字=kw, 转化率=下载/下载页浏览
+# 兼容日志格式：旧4列(time|uid|p|ua)、7列(time|uid|act|p|file|plat|ua)、8列(+ref)
+# PV=页面浏览, UV=独立访客(按uid), 下载=act=download, 来源=ref, 转化率=下载/下载页浏览
+# 注：浏览器 referrer policy 会剥掉跨站跳转查询串，搜索关键字已无法获取，不再统计 kw。
 set -euo pipefail
 
 LOG=/var/log/nginx/gonavi-stats.log
@@ -41,14 +42,6 @@ def _cn_time(ts: str):
         return None
 
 
-def _eng(ref: str) -> str:
-    """识别搜索引擎名：按主机名关键词匹配，失败取主域。"""
-    r = (ref or "").lower()
-    for k in ("google", "bing", "baidu", "sogou", "yandex", "360", "so.com"):
-        if k in r:
-            return {"google":"google","bing":"bing","baidu":"baidu","sogou":"sogou","yandex":"yandex","360":"360","so.com":"360"}[k]
-    return (ref or "?").split(".")[0] if ref else "?"
-
 def dec(x):
     try: return urllib.parse.unquote(x)
     except: return x
@@ -64,7 +57,7 @@ for ln in _read_lines(log) + _read_lines(log + '.1'):  # 兼容 logrotate 轮转
     ln = ln.rstrip('\n')
     if not ln: continue
     parts = ln.split('\t')
-    # 兼容: 4列(time|uid|p|ua) 7列(+act/file/plat) 8列(+ref) 9列(+kw)
+    # 兼容: 4列(time|uid|p|ua) 7列(+act/file/plat) 8列(+ref)
     if len(parts) < 3: continue
     ts, uid = parts[0], parts[1]
     cn_time = _cn_time(ts)
@@ -72,18 +65,17 @@ for ln in _read_lines(log) + _read_lines(log + '.1'):  # 兼容 logrotate 轮转
         continue
     day = cn_time.date().isoformat() if cn_time else ts[:10]
     if len(parts) >= 8:
-        # 新8/9列: time|uid|act|p|file|plat|ref|[kw]|ua （act 可能为空）
+        # 新8列: time|uid|act|p|file|plat|ref|ua （act 可能为空）
         act = 'download' if parts[2] == 'download' else ''
         p   = parts[3]
         file= parts[4]
         plat= parts[5]
         ref = dec(parts[6])
-        kw  = dec(parts[7]) if len(parts) >= 9 else ''
     else:
         # 旧4列: time|uid|p|ua
         act, p = '', parts[2]
-        file = plat = ref = kw = ''
-    rows.append(dict(ts=ts, day=day, uid=uid, act=act, p=p, file=file, plat=plat, ref=ref, kw=kw))
+        file = plat = ref = ''
+    rows.append(dict(ts=ts, day=day, uid=uid, act=act, p=p, file=file, plat=plat, ref=ref))
 
 total = len(rows)
 uv = len(set(r['uid'] for r in rows if r['uid']))
@@ -122,18 +114,6 @@ for ref, c in refs.most_common(12):
     print(f"  {c:4d}  {ref}")
 if internal_cnt:
     print(f"  {internal_cnt:4d}  (站内跳转 {SITE_DOMAIN})")
-
-# 搜索关键字（仅搜索引擎来源带 kw；只统计页面浏览，下载动作不计入）
-print("\n搜索关键字 TOP:")
-kws = collections.Counter(
-    (_eng(r['ref']), r['kw'])
-    for r in rows if r['kw'] and r['kw'] != '-' and r['act'] != 'download'
-)
-if kws:
-    for (eng, kw), c in kws.most_common(15):
-        print(f"  {c:4d}  {eng} · {kw}")
-else:
-    print("  （暂无，等待搜索引擎流量）")
 
 # 页面 TOP
 print("\n页面浏览 TOP:")

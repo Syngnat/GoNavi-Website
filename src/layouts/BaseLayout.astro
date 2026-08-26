@@ -47,21 +47,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'http://localhost:41
           } catch (e) {}
           if (uid) {
             // 手动拼接，避免 URLSearchParams 把路径里的 / 编码成 %2F
-            // ref 记录访问来源域名；kw 提取搜索引擎关键字（google/bing→q, baidu→wd, sogou→query, yandex→text）
+            // ref 记录访问来源域名（仅 hostname）。浏览器 referrer policy（strict-origin-when-cross-origin）
+            // 会剥掉跨站跳转的查询串，搜索关键字已无法获取，故不再上报 kw。
             var ref = '';
-            var kw = '';
             try {
-              var ru = new URL(document.referrer);
-              ref = ru.hostname;
-              var h = ru.hostname.toLowerCase();
-              var sp = ru.searchParams;
-              if (h.indexOf('google') !== -1) kw = sp.get('q') || '';
-              else if (h.indexOf('bing') !== -1) kw = sp.get('q') || '';
-              else if (h.indexOf('baidu') !== -1) kw = sp.get('wd') || '';
-              else if (h.indexOf('sogou') !== -1) kw = sp.get('query') || '';
-              else if (h.indexOf('yandex') !== -1) kw = sp.get('text') || '';
+              ref = new URL(document.referrer).hostname;
             } catch (e) {}
-            var q = 'uid=' + encodeURIComponent(uid) + '&p=' + p + '&ref=' + encodeURIComponent(ref) + '&kw=' + encodeURIComponent(kw);
+            var q = 'uid=' + encodeURIComponent(uid) + '&p=' + p + '&ref=' + encodeURIComponent(ref);
             var ok = navigator.sendBeacon('/__stats?' + q);
             if (!ok) {
               fetch('/__stats?' + q, { method: 'GET', keepalive: true }).catch(function () {});
