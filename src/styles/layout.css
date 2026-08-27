@@ -2554,7 +2554,7 @@ a.docs-pager__item:hover {
   top: 50%;
   right: calc(var(--space-4) * -1);
   width: 1px;
-  height: min(72px, 72%);
+  height: 72px;
   content: '';
   background: var(--separator);
   transform: translateY(-50%);
@@ -2596,6 +2596,17 @@ a.docs-pager__item:hover {
   letter-spacing: 0.005em;
   text-wrap: pretty;
   color: var(--text-secondary);
+}
+
+.sponsor-banner__description::after {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--space-4) * -1);
+  width: 1px;
+  height: 72px;
+  content: '';
+  background: var(--separator);
+  transform: translateY(-50%);
 }
 
 .sponsor-banner__action {
@@ -2677,6 +2688,10 @@ a.docs-pager__item:hover {
   }
 
   .sponsor-banner__brand::after {
+    display: none;
+  }
+
+  .sponsor-banner__description::after {
     display: none;
   }
 
