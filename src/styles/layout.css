@@ -1044,44 +1044,64 @@
   color: var(--text-primary);
 }
 
-.site-footer__group-link--wechat {
-  cursor: default;
-  user-select: all;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
-  background: var(--fill-f1);
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+.site-footer__telegram {
   display: inline-block;
   width: fit-content;
-}
-
-.site-footer__telegram {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
   margin-top: var(--space-2);
-}
-
-.site-footer__telegram img {
-  display: block;
-  width: 96px;
-  height: 96px;
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-md);
-  background: #fff;
-  object-fit: contain;
-}
-
-.site-footer__telegram-label {
+  white-space: nowrap;
+  color: var(--text-tertiary);
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
   letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.site-footer__telegram:hover {
+  color: var(--text-primary);
+}
+
+.site-footer__telegram--wechat {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: copy;
+}
+
+.site-footer__telegram--wechat--zh {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 20px;
+  text-transform: none;
+}
+
+.site-footer__contact-label {
+  display: inline-grid;
+}
+
+.site-footer__contact-label > * {
+  grid-area: 1 / 1;
+}
+
+.site-footer__contact-label-measure {
+  visibility: hidden;
+}
+
+.site-footer__telegram--wechat[data-copy-state='success'] {
+  color: var(--accent-blue);
+}
+
+.site-footer__telegram--wechat[data-copy-state='failure'] {
+  color: var(--text-primary);
+}
+
+.site-footer__telegram--wechat:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
 }
 
 .site-footer__bottom {
@@ -2528,6 +2548,7 @@ a.docs-pager__item:hover {
   grid-area: 1 / 1;
   grid-template-columns: 180px minmax(0, 1fr) max-content;
   align-items: center;
+  min-height: 226px;
   gap: var(--space-8);
   padding: 28px var(--space-8);
   border: 1px solid var(--separator);
@@ -2669,6 +2690,64 @@ a.docs-pager__item:hover {
   text-align: center;
 }
 
+.sponsor-section__invitation {
+  max-width: 72rem;
+  margin: var(--space-4) auto 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.sponsor-section__contact {
+  color: var(--text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sponsor-section__contact:hover {
+  color: var(--accent);
+}
+
+.sponsor-section__contact--copy {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: copy;
+}
+
+.sponsor-section__contact-copy-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.sponsor-section__contact-feedback {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.sponsor-section__contact--copy[data-copy-state='success'] {
+  color: var(--accent);
+}
+
+.sponsor-section__contact--copy[data-copy-state='failure'] {
+  color: var(--text-primary);
+}
+
+.sponsor-section__contact--copy:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .sponsor-carousel__sr-only {
   position: absolute;
   width: 1px;
@@ -2683,6 +2762,7 @@ a.docs-pager__item:hover {
 @media (max-width: 760px) {
   .sponsor-banner {
     grid-template-columns: 1fr;
+    min-height: 0;
     gap: var(--space-4);
     padding: var(--space-5);
   }
@@ -2697,6 +2777,11 @@ a.docs-pager__item:hover {
 
   .sponsor-banner__action {
     justify-self: start;
+  }
+
+  .sponsor-section__invitation {
+    margin-top: var(--space-3);
+    font-size: 12px;
   }
 
   .sponsor-banner__logo--hualong {

@@ -70,6 +70,9 @@ export const footerCopy: Record<Locale, {
   license: string;
   wechat: string;
   wechatId: string;
+  wechatCopyHint: string;
+  wechatCopied: string;
+  wechatCopyFailed: string;
 }> = {
   zh: {
     copy: 'GoNavi — 原生数据库工作台。基于 Wails 与 React。',
@@ -82,6 +85,9 @@ export const footerCopy: Record<Locale, {
     license: 'Apache-2.0',
     wechat: '微信',
     wechatId: 'ygf1140302783',
+    wechatCopyHint: '点击复制微信号',
+    wechatCopied: '微信号已复制',
+    wechatCopyFailed: '复制失败，请手动复制',
   },
   en: {
     copy: 'GoNavi — a native database workbench built with Wails and React.',
@@ -94,6 +100,9 @@ export const footerCopy: Record<Locale, {
     license: 'Apache-2.0',
     wechat: 'WeChat',
     wechatId: 'ygf1140302783',
+    wechatCopyHint: 'Click to copy WeChat ID',
+    wechatCopied: 'WeChat ID copied',
+    wechatCopyFailed: 'Copy failed — copy manually',
   },
 };
 

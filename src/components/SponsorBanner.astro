@@ -11,6 +11,15 @@ const copy = locale === 'zh'
       label: '本期赞助商',
       previous: '显示上一位赞助商',
       next: '显示下一位赞助商',
+      invitation: '欢迎赞助 GoNavi！我们欢迎个人与企业通过赞助或合作支持项目持续开源发展。',
+      invitationContact: '有意赞助请通过微信',
+      invitationContactHandle: 'ygf1140302783',
+      invitationContactHref: '',
+      invitationContactCopyValue: 'ygf1140302783',
+      invitationContactCopyHint: '点击复制微信号',
+      invitationContactCopied: '微信号已复制',
+      invitationContactCopyFailed: '复制失败，请手动复制',
+      invitationNote: '（备注「GoNavi」）联系维护者沟通。',
       announcement: (name: string, current: number, total: number) => `正在显示 ${name}，第 ${current} 位，共 ${total} 位赞助商。`,
       sponsors: [
         {
@@ -41,6 +50,15 @@ const copy = locale === 'zh'
       label: 'Current sponsors',
       previous: 'Show previous sponsor',
       next: 'Show next sponsor',
+      invitation: 'Interested in sponsoring GoNavi? We welcome sponsorships and partnerships that help sustain its open-source development.',
+      invitationContact: 'To discuss sponsorship, contact the maintainer on Telegram:',
+      invitationContactHandle: '@Syngnat',
+      invitationContactHref: 'https://t.me/Syngnat',
+      invitationContactCopyValue: '',
+      invitationContactCopyHint: '',
+      invitationContactCopied: '',
+      invitationContactCopyFailed: '',
+      invitationNote: '',
       announcement: (name: string, current: number, total: number) => `Now showing ${name}, sponsor ${current} of ${total}.`,
       sponsors: [
         {
@@ -130,12 +148,53 @@ const copy = locale === 'zh'
           </svg>
         </button>
       </div>
+      <p class="sponsor-section__invitation">
+        {copy.invitation}
+        {' '}
+        {copy.invitationContact}
+        {copy.invitationContactHandle && (
+          <>
+            {' '}
+            {copy.invitationContactCopyValue ? (
+              <span class="sponsor-section__contact-copy-wrap">
+                <button
+                  type="button"
+                  class="sponsor-section__contact sponsor-section__contact--copy"
+                  data-sponsor-contact-copy
+                  data-sponsor-contact-value={copy.invitationContactCopyValue}
+                  data-sponsor-contact-success={copy.invitationContactCopied}
+                  data-sponsor-contact-failure={copy.invitationContactCopyFailed}
+                  aria-label={`${copy.invitationContactHandle}。${copy.invitationContactCopyHint}`}
+                  title={copy.invitationContactCopyHint}
+                >
+                  {copy.invitationContactHandle}
+                </button>
+                <span class="sponsor-section__contact-feedback" data-sponsor-contact-feedback aria-live="polite"></span>
+              </span>
+            ) : copy.invitationContactHref ? (
+              <a
+                class="sponsor-section__contact"
+                href={copy.invitationContactHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {copy.invitationContactHandle}
+              </a>
+            ) : (
+              <span class="sponsor-section__contact">{copy.invitationContactHandle}</span>
+            )}
+            {' '}
+            {copy.invitationNote}
+          </>
+        )}
+      </p>
       <p class="sponsor-carousel__sr-only" data-sponsor-status aria-live="polite"></p>
     </div>
 </aside>
 
 <script>
   import { trackSponsorClick, trackSponsorImpression } from '../lib/analytics-client';
+  import { copyText } from '../lib/clipboard';
 
   document.querySelectorAll('[data-sponsor-carousel]').forEach((root) => {
     const carousel = root.querySelector('.sponsor-carousel');
@@ -276,5 +335,28 @@ const copy = locale === 'zh'
     };
 
     initialise().catch(() => {});
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-sponsor-contact-copy]').forEach((button) => {
+    const feedback = button.parentElement?.querySelector<HTMLElement>('[data-sponsor-contact-feedback]');
+    let resetTimer: number | undefined;
+
+    button.addEventListener('click', async () => {
+      window.clearTimeout(resetTimer);
+
+      try {
+        await copyText(button.dataset.sponsorContactValue ?? '');
+        button.dataset.copyState = 'success';
+        if (feedback) feedback.textContent = button.dataset.sponsorContactSuccess ?? '';
+      } catch {
+        button.dataset.copyState = 'failure';
+        if (feedback) feedback.textContent = button.dataset.sponsorContactFailure ?? '';
+      }
+
+      resetTimer = window.setTimeout(() => {
+        delete button.dataset.copyState;
+        if (feedback) feedback.textContent = '';
+      }, 1800);
+    });
   });
 </script>

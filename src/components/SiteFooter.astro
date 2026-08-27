@@ -62,20 +62,33 @@ const copy = footerCopy[locale];
             <a class="site-footer__group-link" href={GITHUB_DISCUSSIONS_URL} target="_blank" rel="noreferrer">
               {copy.discussions}
             </a>
-            <span class="site-footer__group-link site-footer__group-link--wechat">
-              {copy.wechat}：{copy.wechatId}
-            </span>
+            <button
+              type="button"
+              class={`site-footer__telegram site-footer__telegram--wechat${locale === 'zh' ? ' site-footer__telegram--wechat--zh' : ''}`}
+              data-wechat-copy
+              data-wechat-id={copy.wechatId}
+              data-wechat-default={`${copy.wechat} · ${copy.wechatId}`}
+              data-wechat-success={copy.wechatCopied}
+              data-wechat-failure={copy.wechatCopyFailed}
+              aria-label={`${copy.wechat} · ${copy.wechatId}。${copy.wechatCopyHint}`}
+              title={copy.wechatCopyHint}
+            >
+              <span class="site-footer__contact-label">
+                <span data-wechat-copy-label aria-live="polite">{copy.wechat} · {copy.wechatId}</span>
+                <span class="site-footer__contact-label-measure" aria-hidden="true">{copy.wechat} · {copy.wechatId}</span>
+                <span class="site-footer__contact-label-measure" aria-hidden="true">{copy.wechatCopyFailed}</span>
+              </span>
+            </button>
             {locale === 'en' && (
-              <div class="site-footer__telegram">
-                <img
-                  src="/telegram-qr.png"
-                  alt="Telegram QR code"
-                  width="96"
-                  height="96"
-                  loading="lazy"
-                />
-                <span class="site-footer__telegram-label">Telegram</span>
-              </div>
+              <a
+                class="site-footer__telegram"
+                href="https://t.me/Syngnat"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open @Syngnat on Telegram"
+              >
+                Telegram · @Syngnat
+              </a>
             )}
           </div>
         </div>
@@ -88,3 +101,31 @@ const copy = footerCopy[locale];
     </div>
   </div>
 </footer>
+
+<script>
+  import { copyText } from '../lib/clipboard';
+
+  document.querySelectorAll<HTMLButtonElement>('[data-wechat-copy]').forEach((button) => {
+    const label = button.querySelector<HTMLElement>('[data-wechat-copy-label]');
+    const defaultText = button.dataset.wechatDefault ?? '';
+    let resetTimer: number | undefined;
+
+    button.addEventListener('click', async () => {
+      window.clearTimeout(resetTimer);
+
+      try {
+        await copyText(button.dataset.wechatId ?? '');
+        button.dataset.copyState = 'success';
+        if (label) label.textContent = button.dataset.wechatSuccess ?? defaultText;
+      } catch {
+        button.dataset.copyState = 'failure';
+        if (label) label.textContent = button.dataset.wechatFailure ?? defaultText;
+      }
+
+      resetTimer = window.setTimeout(() => {
+        delete button.dataset.copyState;
+        if (label) label.textContent = defaultText;
+      }, 1800);
+    });
+  });
+</script>
