@@ -1,6 +1,6 @@
 ---
 title: 常见问题
-summary: 安装、启动与连接相关的常见故障排查
+summary: 排查 GoNavi 安装、启动、WebView2 依赖与数据库连接相关的常见问题
 order: 99
 locale: zh
 slug: faq

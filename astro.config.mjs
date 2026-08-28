@@ -9,6 +9,13 @@ export default defineConfig({
     sitemap({
       // The root route only selects a language and canonicals to /zh/.
       filter: (page) => page !== 'https://gonavi.org/',
+      i18n: {
+        defaultLocale: 'zh',
+        locales: {
+          zh: 'zh-CN',
+          en: 'en-US',
+        },
+      },
     }),
   ],
   markdown: {

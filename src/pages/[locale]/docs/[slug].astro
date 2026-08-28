@@ -33,7 +33,13 @@ const copy = {
   next: isZh ? '下一篇' : 'Next',
 };
 ---
-<BaseLayout locale={locale} title={doc.data.title} description={doc.data.summary} current={`/docs/${slug}`}>
+<BaseLayout
+  locale={locale}
+  title={doc.data.title}
+  description={doc.data.summary}
+  current={`/docs/${slug}`}
+  article={{ section: locale === 'zh' ? 'GoNavi 文档' : 'GoNavi Documentation' }}
+>
   <div class="site-shell__inner page-wrap">
     <div class="docs-layout">
       <aside class="docs-sidebar">

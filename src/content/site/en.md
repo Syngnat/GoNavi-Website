@@ -1,7 +1,7 @@
 ---
 title: A native desktop workstation for multi-database workflows
 eyebrow: GoNavi / Native Database Workflow
-description: GoNavi brings a light, steady, and fast desktop experience to 30+ data sources including PostgreSQL, MySQL, Oracle, Redis, Kafka, MongoDB, ClickHouse, Elasticsearch, and more — letting developers and teams connect, query, compare, and ship from one place.
+description: Native desktop database workbench for 30+ sources including PostgreSQL, MySQL, Oracle, Redis, Kafka, MongoDB, and ClickHouse. Connect, query, compare, and deliver in one place.
 primaryCta:
   label: Download
   href: /en/download

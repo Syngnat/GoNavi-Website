@@ -1,6 +1,6 @@
 ---
 title: 快速开始
-summary: 从下载到第一条查询的最短路径
+summary: 从下载安装 GoNavi 到创建连接并完成第一条查询的最短路径
 order: 2
 locale: zh
 slug: quick-start

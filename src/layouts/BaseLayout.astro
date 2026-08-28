@@ -14,19 +14,47 @@ interface Props {
   description?: string;
   /** e.g. '/download' */
   current?: string;
+  article?: {
+    section: string;
+  };
 }
 
-const { locale, title, description, current = '/' } = Astro.props;
+const { locale, title, description, current = '/', article } = Astro.props;
 const siteTitle = title ? `${title} · GoNavi` : 'GoNavi — Navigate every data source';
 const siteUrl = Astro.site ?? new URL('http://localhost:4173');
 const canonical = new URL(Astro.url.pathname, siteUrl);
 const routePath = stripLocale(Astro.url.pathname);
+const normalizedRoutePath = routePath === '/' ? '/' : routePath.replace(/\/+$/, '');
 const zhAlternate = new URL(withLocale('zh', routePath), siteUrl);
 const enAlternate = new URL(withLocale('en', routePath), siteUrl);
 const socialImage = new URL('/screenshots/01-home-workbench.png', siteUrl);
 const localeTag = locale === 'zh' ? 'zh_CN' : 'en_US';
 const alternateLocaleTag = locale === 'zh' ? 'en_US' : 'zh_CN';
 const socialImageAlt = locale === 'zh' ? 'GoNavi 数据库工作台界面' : 'GoNavi database workbench interface';
+const language = locale === 'zh' ? 'zh-CN' : 'en-US';
+const homeUrl = new URL(withLocale(locale, '/'), siteUrl);
+const docsUrl = new URL(withLocale(locale, '/docs'), siteUrl);
+const routeLabels: Record<string, string> = {
+  '/download': locale === 'zh' ? '下载' : 'Download',
+  '/docs': locale === 'zh' ? '文档' : 'Docs',
+  '/changelog': locale === 'zh' ? '更新日志' : 'Changelog',
+  '/roadmap': locale === 'zh' ? '路线图' : 'Roadmap',
+};
+const breadcrumbItems: { name: string; item: string }[] = [{ name: 'GoNavi', item: homeUrl.href }];
+if (normalizedRoutePath.startsWith('/docs/')) {
+  breadcrumbItems.push(
+    { name: routeLabels['/docs'], item: docsUrl.href },
+    { name: title ?? 'Docs', item: canonical.href },
+  );
+} else if (normalizedRoutePath !== '/') {
+  breadcrumbItems.push({
+    name: routeLabels[normalizedRoutePath] ?? title ?? normalizedRoutePath,
+    item: canonical.href,
+  });
+}
+const breadcrumbId = `${canonical.href}#breadcrumb`;
+const articleId = `${canonical.href}#article`;
+const softwareId = `${canonical.href}#software`;
 const structuredData = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -44,7 +72,7 @@ const structuredData = JSON.stringify({
       name: 'GoNavi',
       url: new URL('/', siteUrl).href,
       publisher: { '@id': new URL('/#organization', siteUrl).href },
-      inLanguage: locale === 'zh' ? 'zh-CN' : 'en-US',
+      inLanguage: ['zh-CN', 'en-US'],
     },
     {
       '@type': 'WebPage',
@@ -52,21 +80,52 @@ const structuredData = JSON.stringify({
       name: siteTitle,
       url: canonical.href,
       description,
-      inLanguage: locale === 'zh' ? 'zh-CN' : 'en-US',
+      inLanguage: language,
       isPartOf: { '@id': new URL('/#website', siteUrl).href },
-      ...(current === '/' ? { mainEntity: { '@id': new URL('/#software', siteUrl).href } } : {}),
+      breadcrumb: { '@id': breadcrumbId },
+      ...(current === '/' ? { mainEntity: { '@id': softwareId } } : {}),
+      ...(article ? { mainEntity: { '@id': articleId } } : {}),
     },
     ...(current === '/' ? [{
       '@type': 'SoftwareApplication',
-      '@id': new URL('/#software', siteUrl).href,
+      '@id': softwareId,
       name: 'GoNavi',
       applicationCategory: 'DeveloperApplication',
+      applicationSubCategory: 'Database Management Software',
       description,
       url: canonical.href,
       image: socialImage.href,
-      inLanguage: locale === 'zh' ? 'zh-CN' : 'en-US',
+      operatingSystem: 'Windows, macOS, Linux',
+      featureList: locale === 'zh'
+        ? ['30+ 数据源', '原生桌面工作台', 'SQL 查询与结果比对', 'AI 助手']
+        : ['30+ data sources', 'Native desktop workbench', 'SQL queries and result comparison', 'AI assistant'],
+      inLanguage: language,
       publisher: { '@id': new URL('/#organization', siteUrl).href },
     }] : []),
+    ...(article ? [{
+      '@type': 'TechArticle',
+      '@id': articleId,
+      headline: title,
+      description,
+      url: canonical.href,
+      image: socialImage.href,
+      inLanguage: language,
+      articleSection: article.section,
+      author: { '@id': new URL('/#organization', siteUrl).href },
+      publisher: { '@id': new URL('/#organization', siteUrl).href },
+      isPartOf: { '@id': new URL('/#website', siteUrl).href },
+      mainEntityOfPage: { '@id': canonical.href },
+    }] : []),
+    {
+      '@type': 'BreadcrumbList',
+      '@id': breadcrumbId,
+      itemListElement: breadcrumbItems.map((item, position) => ({
+        '@type': 'ListItem',
+        position: position + 1,
+        name: item.name,
+        item: item.item,
+      })),
+    },
   ],
 }).replace(/</g, '\\u003c');
 ---
@@ -81,7 +140,7 @@ const structuredData = JSON.stringify({
     <link rel="alternate" hreflang="zh-CN" href={zhAlternate} />
     <link rel="alternate" hreflang="en-US" href={enAlternate} />
     <link rel="alternate" hreflang="x-default" href={zhAlternate} />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
     <link rel="icon" type="image/webp" href="/logo.webp?v=20260731" sizes="512x512" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />

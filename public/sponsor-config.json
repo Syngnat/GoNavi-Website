@@ -1,7 +1,7 @@
 {
   "sponsors": {
     "apismart": {
-      "enabled": false,
+      "enabled": true,
       "weight": 0
     },
     "hualong": {
