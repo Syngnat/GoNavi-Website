@@ -2793,10 +2793,6 @@ a.docs-pager__item:hover {
     width: min(100%, 132px);
   }
 
-  /* 桌面端用 translateY(-33%) 补偿 logo 内边距，移动端视觉反而偏空，去掉 */
-  .sponsor-banner__logo--apismart img {
-    transform: none;
-  }
 }
 
 /* ============================================
