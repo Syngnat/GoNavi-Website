@@ -40,6 +40,7 @@ export const navCopy: Record<Locale, {
   blog: string;
   changelog: string;
   roadmap: string;
+  more: string;
   brandTag: string;
 }> = {
   zh: {
@@ -49,6 +50,7 @@ export const navCopy: Record<Locale, {
     blog: '博客',
     changelog: '更新日志',
     roadmap: '路线图',
+    more: '更多',
     brandTag: '数据库工作台',
   },
   en: {
@@ -58,6 +60,7 @@ export const navCopy: Record<Locale, {
     blog: 'Blog',
     changelog: 'Changelog',
     roadmap: 'Roadmap',
+    more: 'More',
     brandTag: 'Database workbench',
   },
 };

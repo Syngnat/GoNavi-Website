@@ -1,6 +1,6 @@
 ---
 import type { Locale } from '../lib/i18n';
-import { GITHUB_URL, navCopy, otherLocale, stripLocale, withLocale } from '../lib/i18n';
+import { GITHUB_URL, navCopy, stripLocale, withLocale } from '../lib/i18n';
 import { fetchGitHubStats } from '../lib/releases';
 
 interface Props {
@@ -18,11 +18,14 @@ const formatCount = (n: number): string => {
   return String(n);
 };
 
-const links: Array<{ key: string; path: string; label: string }> = [
+const primaryLinks: Array<{ key: string; path: string; label: string }> = [
   { key: 'home', path: '/', label: nav.home },
   { key: 'download', path: '/download', label: nav.download },
   { key: 'docs', path: '/docs', label: nav.docs },
   { key: 'blog', path: '/blog', label: nav.blog },
+];
+
+const moreLinks: Array<{ key: string; path: string; label: string }> = [
   { key: 'changelog', path: '/changelog', label: nav.changelog },
   { key: 'roadmap', path: '/roadmap', label: nav.roadmap },
 ];
@@ -32,7 +35,7 @@ function isActive(linkPath: string): boolean {
   return current === linkPath || current.startsWith(`${linkPath}/`);
 }
 
-const nextLocale = otherLocale(locale);
+const moreActive = moreLinks.some((link) => isActive(link.path));
 ---
 <header class="site-header">
   <div class="site-shell__inner site-header__inner">
@@ -46,7 +49,7 @@ const nextLocale = otherLocale(locale);
 
     <div class="site-header__meta">
       <nav class="site-nav" aria-label="primary">
-        {links.map((link) => (
+        {primaryLinks.map((link) => (
           <a
             href={withLocale(locale, link.path)}
             class:list={['site-nav__link', { 'site-nav__link--active': isActive(link.path) }]}
@@ -55,6 +58,40 @@ const nextLocale = otherLocale(locale);
             {link.label}
           </a>
         ))}
+
+        <div class="site-nav__more" data-nav-more>
+          <button
+            type="button"
+            class:list={['site-nav__link', 'site-nav__more-btn', { 'site-nav__link--active': moreActive }]}
+            aria-expanded="false"
+            aria-haspopup="menu"
+            aria-controls="site-nav-more-menu"
+            data-nav-more-btn
+          >
+            {nav.more}
+            <svg class="site-nav__more-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div
+            class="site-nav__more-menu"
+            id="site-nav-more-menu"
+            role="menu"
+            hidden
+            data-nav-more-menu
+          >
+            {moreLinks.map((link) => (
+              <a
+                role="menuitem"
+                href={withLocale(locale, link.path)}
+                class:list={['site-nav__more-item', { 'site-nav__more-item--active': isActive(link.path) }]}
+                aria-current={isActive(link.path) ? 'page' : undefined}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
       </nav>
 
       <div class="locale-switch" aria-label="locale">
@@ -80,14 +117,95 @@ const nextLocale = otherLocale(locale);
         href={GITHUB_URL}
         rel="noreferrer"
         target="_blank"
-        aria-label="GitHub"
+        aria-label={`GitHub · ${formatCount(stats.stars)} stars`}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.15c-3.2.7-3.87-1.37-3.87-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.41-2.69 5.38-5.25 5.66.41.36.77 1.06.77 2.14v3.17c0 .3.21.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
         </svg>
         <span class="site-header__gh-stars"><span class="gh-star">★</span> {formatCount(stats.stars)}</span>
-        <span class="site-header__gh-downloads"><span class="gh-download">⬇</span> {formatCount(stats.totalDownloads)}</span>
       </a>
     </div>
   </div>
 </header>
+
+<script>
+  function initNavMore(root: ParentNode = document) {
+    root.querySelectorAll<HTMLElement>('[data-nav-more]').forEach((wrap) => {
+      if (wrap.dataset.navMoreReady === '1') return;
+      wrap.dataset.navMoreReady = '1';
+
+      const btn = wrap.querySelector<HTMLButtonElement>('[data-nav-more-btn]');
+      const menu = wrap.querySelector<HTMLElement>('[data-nav-more-menu]');
+      if (!btn || !menu) return;
+
+      const items = () => Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+
+      const setOpen = (open: boolean) => {
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        menu.hidden = !open;
+        wrap.classList.toggle('site-nav__more--open', open);
+      };
+
+      const close = () => setOpen(false);
+      const open = () => {
+        setOpen(true);
+        items()[0]?.focus();
+      };
+
+      btn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const willOpen = btn.getAttribute('aria-expanded') !== 'true';
+        if (willOpen) open();
+        else close();
+      });
+
+      btn.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          open();
+        }
+      });
+
+      menu.addEventListener('keydown', (event) => {
+        const list = items();
+        const index = list.indexOf(document.activeElement as HTMLElement);
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          close();
+          btn.focus();
+          return;
+        }
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          list[(index + 1) % list.length]?.focus();
+        }
+        if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          list[(index - 1 + list.length) % list.length]?.focus();
+        }
+        if (event.key === 'Home') {
+          event.preventDefault();
+          list[0]?.focus();
+        }
+        if (event.key === 'End') {
+          event.preventDefault();
+          list[list.length - 1]?.focus();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!wrap.contains(event.target as Node)) close();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') {
+          close();
+          btn.focus();
+        }
+      });
+    });
+  }
+
+  initNavMore();
+  document.addEventListener('astro:page-load', () => initNavMore());
+</script>
