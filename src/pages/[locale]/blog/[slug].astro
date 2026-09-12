@@ -14,7 +14,7 @@ const { locale, slug } = Astro.params as { locale: 'zh' | 'en'; slug: string };
 const [post] = (await getCollection('blog'))
   .filter((d) => d.data.locale === locale && d.data.slug === slug);
 if (!post) throw new Error(`Blog post not found: ${locale}/${slug}`);
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 
 const all = (await getCollection('blog'))
   .filter((d) => d.data.locale === locale)
@@ -23,11 +23,21 @@ const all = (await getCollection('blog'))
 const index = all.findIndex((d) => d.data.slug === slug);
 const prev = index > 0 ? all[index - 1] : null;
 const next = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
+const toc = headings.filter((h) => h.depth === 2);
 
 const isZh = locale === 'zh';
+const formatDate = (value: string) => {
+  const date = new Date(`${value}T00:00:00`);
+  return date.toLocaleDateString(isZh ? 'zh-CN' : 'en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 const copy = {
-  sidebarTitle: isZh ? '博客' : 'Blog',
-  backToIndex: isZh ? '全部文章' : 'All posts',
+  backToIndex: isZh ? '← 返回博客' : '← Back to blog',
+  tocTitle: isZh ? '目录' : 'On this page',
   prev: isZh ? '上一篇' : 'Previous',
   next: isZh ? '下一篇' : 'Next',
 };
@@ -39,55 +49,49 @@ const copy = {
   current={`/blog/${slug}`}
   article={{ section: locale === 'zh' ? 'GoNavi 博客' : 'GoNavi Blog' }}
 >
-  <div class="site-shell__inner page-wrap">
-    <div class="docs-layout">
-      <aside class="docs-sidebar">
-        <p class="docs-sidebar__title">{copy.sidebarTitle}</p>
-        <nav class="docs-sidebar__nav">
-          {all.map((d) => (
-            <a
-              class:list={['docs-sidebar__link', { 'docs-sidebar__link--active': d.data.slug === slug }]}
-              href={withLocale(locale, `/blog/${d.data.slug}`)}
-            >
-              {d.data.title}
-            </a>
-          ))}
+  <div class="site-shell__inner page-wrap blog-post">
+    <article class="blog-article">
+      <a class="blog-article__back" href={withLocale(locale, '/blog')}>{copy.backToIndex}</a>
+
+      <header class="blog-article__header">
+        <time class="blog-article__date" datetime={post.data.date}>{formatDate(post.data.date)}</time>
+        <h1 class="blog-article__title">{post.data.title}</h1>
+        {post.data.summary && <p class="blog-article__summary">{post.data.summary}</p>}
+      </header>
+
+      {toc.length > 0 && (
+        <nav class="blog-article__toc" aria-label={copy.tocTitle}>
+          <p class="blog-article__toc-title">{copy.tocTitle}</p>
+          <ol class="blog-article__toc-list">
+            {toc.map((item) => (
+              <li>
+                <a href={`#${item.slug}`}>{item.text}</a>
+              </li>
+            ))}
+          </ol>
         </nav>
-        <a class="docs-sidebar__back" href={withLocale(locale, '/blog')}>
-          {copy.backToIndex}
-        </a>
-      </aside>
+      )}
 
-      <article class="docs-article">
-        <header class="docs-article__header">
-          <div class="docs-article__heading">
-            <div class="docs-article__heading-copy">
-              <h1 class="docs-article__title">{post.data.title}</h1>
-              {post.data.summary && <p class="docs-article__summary">{post.data.summary}</p>}
-            </div>
-          </div>
-        </header>
-        <div class="docs-article__body">
-          <Content />
-        </div>
+      <div class="blog-article__body">
+        <Content />
+      </div>
 
-        {(prev || next) && (
-          <nav class="docs-pager">
-            {prev ? (
-              <a class="docs-pager__item docs-pager__item--prev" href={withLocale(locale, `/blog/${prev.data.slug}`)}>
-                <span class="docs-pager__label">{copy.prev}</span>
-                <span class="docs-pager__title">{prev.data.title}</span>
-              </a>
-            ) : <span class="docs-pager__item docs-pager__item--placeholder" />}
-            {next ? (
-              <a class="docs-pager__item docs-pager__item--next" href={withLocale(locale, `/blog/${next.data.slug}`)}>
-                <span class="docs-pager__label">{copy.next}</span>
-                <span class="docs-pager__title">{next.data.title}</span>
-              </a>
-            ) : <span class="docs-pager__item docs-pager__item--placeholder" />}
-          </nav>
-        )}
-      </article>
-    </div>
+      {(prev || next) && (
+        <nav class="blog-pager" aria-label={isZh ? '相关文章' : 'Related posts'}>
+          {prev ? (
+            <a class="blog-pager__item blog-pager__item--prev" href={withLocale(locale, `/blog/${prev.data.slug}`)}>
+              <span class="blog-pager__label">{copy.prev}</span>
+              <span class="blog-pager__title">{prev.data.title}</span>
+            </a>
+          ) : <span class="blog-pager__item blog-pager__item--placeholder" />}
+          {next ? (
+            <a class="blog-pager__item blog-pager__item--next" href={withLocale(locale, `/blog/${next.data.slug}`)}>
+              <span class="blog-pager__label">{copy.next}</span>
+              <span class="blog-pager__title">{next.data.title}</span>
+            </a>
+          ) : <span class="blog-pager__item blog-pager__item--placeholder" />}
+        </nav>
+      )}
+    </article>
   </div>
 </BaseLayout>
