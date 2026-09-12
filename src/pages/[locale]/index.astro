@@ -45,7 +45,7 @@ const statusLabel = { primary: locale === 'zh' ? '内置' : 'Built-in', supporte
   <SponsorBanner locale={locale} />
   <FeatureGrid heading={data.featuresHeading} features={data.features} />
   <ScreenshotWall heading={data.screenshotsHeading} screenshots={data.screenshots} />
-  <DatabaseMatrix heading={data.databasesHeading} rows={data.databases} statusLabel={statusLabel} />
+  <DatabaseMatrix locale={locale} heading={data.databasesHeading} rows={data.databases} statusLabel={statusLabel} />
 
   <CTASection
     eyebrow={locale === 'zh' ? '下载 / 文档 / 社区' : 'Download / Docs / Community'}
