@@ -34,9 +34,11 @@ const socialImageAlt = locale === 'zh' ? 'GoNavi 数据库工作台界面' : 'Go
 const language = locale === 'zh' ? 'zh-CN' : 'en-US';
 const homeUrl = new URL(withLocale(locale, '/'), siteUrl);
 const docsUrl = new URL(withLocale(locale, '/docs'), siteUrl);
+const blogUrl = new URL(withLocale(locale, '/blog'), siteUrl);
 const routeLabels: Record<string, string> = {
   '/download': locale === 'zh' ? '下载' : 'Download',
   '/docs': locale === 'zh' ? '文档' : 'Docs',
+  '/blog': locale === 'zh' ? '博客' : 'Blog',
   '/changelog': locale === 'zh' ? '更新日志' : 'Changelog',
   '/roadmap': locale === 'zh' ? '路线图' : 'Roadmap',
 };
@@ -45,6 +47,11 @@ if (normalizedRoutePath.startsWith('/docs/')) {
   breadcrumbItems.push(
     { name: routeLabels['/docs'], item: docsUrl.href },
     { name: title ?? 'Docs', item: canonical.href },
+  );
+} else if (normalizedRoutePath.startsWith('/blog/')) {
+  breadcrumbItems.push(
+    { name: routeLabels['/blog'], item: blogUrl.href },
+    { name: title ?? 'Blog', item: canonical.href },
   );
 } else if (normalizedRoutePath !== '/') {
   breadcrumbItems.push({

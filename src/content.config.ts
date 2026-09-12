@@ -50,4 +50,21 @@ const roadmap = defineCollection({
   }),
 });
 
-export const collections = { site, docs, roadmap };
+
+const blog = defineCollection({
+  loader: glob({
+    pattern: '**/*.md',
+    base: './src/content/blog',
+    generateId: ({ entry }) => entry.replace(/\.md$/, '').replace(/\//g, '-'),
+  }),
+  schema: z.object({
+    title: z.string(),
+    summary: z.string(),
+    locale: z.enum(['zh', 'en']),
+    slug: z.string(),
+    date: z.string(),
+    order: z.number().optional(),
+  }),
+});
+
+export const collections = { site, docs, roadmap, blog };
