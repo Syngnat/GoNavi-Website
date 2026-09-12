@@ -1,7 +1,7 @@
 ---
 title: 为多数据库工作流打造的原生桌面工作台
 eyebrow: GoNavi / 原生数据库工作流
-description: 以轻稳快的桌面体验串联 PostgreSQL、MySQL、Oracle、Redis、Kafka、MongoDB、ClickHouse、Elasticsearch 等 30+ 种数据源，让开发者和团队在同一个地方完成连接、查询、比对与交付。
+description: 以轻稳快的桌面体验串联 30+ 种数据源，让开发者和团队在同一个地方完成连接、查询、比对与交付。
 primaryCta:
   label: 立即下载
   href: /zh/download

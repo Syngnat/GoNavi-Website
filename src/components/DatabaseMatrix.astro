@@ -10,11 +10,90 @@ interface Props {
   heading: { eyebrow: string; title: string; description: string };
   rows: DB[];
   statusLabel: { primary: string; supported: string };
+  locale?: 'zh' | 'en';
 }
 
-const { heading, rows, statusLabel } = Astro.props;
+const { heading, rows, statusLabel, locale = 'zh' } = Astro.props;
+
+const primaryRows = rows.filter((row) => row.status === 'primary');
+const supportedRows = rows.filter((row) => row.status === 'supported');
+const hiddenCount = supportedRows.length;
+
+const categoryByKind: Record<string, string> = {
+  pg: 'relational',
+  mysql: 'relational',
+  oracle: 'relational',
+  mssql: 'relational',
+  sqlite: 'relational',
+  mariadb: 'relational',
+  clickhouse: 'relational',
+  duckdb: 'relational',
+  dameng: 'domestic',
+  kingbase: 'domestic',
+  redis: 'nosql',
+  mongo: 'nosql',
+  elasticsearch: 'nosql',
+  kafka: 'messaging',
+  tdengine: 'timeseries',
+};
+
+const categoryByName: Record<string, string> = {
+  Doris: 'relational',
+  StarRocks: 'relational',
+  OceanBase: 'domestic',
+  OpenGauss: 'domestic',
+  GaussDB: 'domestic',
+  RabbitMQ: 'messaging',
+  RocketMQ: 'messaging',
+  Chroma: 'vector',
+  Milvus: 'vector',
+  Qdrant: 'vector',
+  Nacos: 'other',
+  Sphinx: 'other',
+  '达梦 DM8': 'domestic',
+  '人大金仓 Kingbase': 'domestic',
+  'Dameng DM8': 'domestic',
+  Kingbase: 'domestic',
+};
+
+const categoryLabelsZh: Record<string, string> = {
+  relational: '关系型',
+  nosql: 'NoSQL',
+  messaging: '消息队列',
+  timeseries: '时序',
+  domestic: '国产库',
+  vector: '向量',
+  other: '其他',
+};
+
+const categoryLabelsEn: Record<string, string> = {
+  relational: 'Relational',
+  nosql: 'NoSQL',
+  messaging: 'Messaging',
+  timeseries: 'Time-series',
+  domestic: 'Domestic',
+  vector: 'Vector',
+  other: 'Other',
+};
+
+const categoryOrder = ['relational', 'nosql', 'messaging', 'timeseries', 'domestic', 'vector', 'other'];
+
+function resolveCategory(row: DB): string {
+  return categoryByName[row.name] ?? categoryByKind[row.kind] ?? 'other';
+}
+
+const presentCategories = categoryOrder.filter((key) =>
+  rows.some((row) => resolveCategory(row) === key),
+);
+
+const labels = locale === 'zh' ? categoryLabelsZh : categoryLabelsEn;
+const expandLabel =
+  locale === 'zh'
+    ? `展开全部数据源（${hiddenCount}）`
+    : `Show all data sources (${hiddenCount})`;
+const collapseLabel = locale === 'zh' ? '收起' : 'Collapse';
 ---
-<section class="home-section-wrap">
+<section class="home-section-wrap" id="sources">
   <div class="site-shell__inner">
     <div class="section-header">
       <p class="section-eyebrow">{heading.eyebrow}</p>
@@ -22,16 +101,74 @@ const { heading, rows, statusLabel } = Astro.props;
       <p class="section-desc">{heading.description}</p>
     </div>
 
-    <div class="db-matrix">
-      {rows.map((row) => (
-        <div class="db-matrix__row">
-          <div class={`db-matrix__name db-matrix__name--${row.kind}`}>{row.name}</div>
-          <span class={`db-matrix__status db-matrix__status--${row.status}`}>
-            {statusLabel[row.status]}
-          </span>
-          <p class="db-matrix__detail">{row.detail}</p>
+    <div class="db-matrix-fold" data-db-matrix-fold>
+      <div class="db-matrix-fold__summary">
+        <div class="db-matrix-fold__categories" aria-label={locale === 'zh' ? '数据源类别' : 'Data source categories'}>
+          {presentCategories.map((key) => (
+            <span class="db-matrix-chip db-matrix-chip--category">{labels[key]}</span>
+          ))}
         </div>
-      ))}
+        <div class="db-matrix-fold__names" aria-label={statusLabel.primary}>
+          {primaryRows.map((row) => (
+            <span class={`db-matrix-chip db-matrix-chip--name db-matrix-chip--${row.kind}`}>{row.name}</span>
+          ))}
+        </div>
+      </div>
+
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          class="db-matrix-fold__toggle"
+          data-db-matrix-toggle
+          aria-expanded="false"
+          aria-controls="db-matrix-full"
+        >
+          <span data-db-matrix-toggle-label>{expandLabel}</span>
+        </button>
+      )}
+
+      <div
+        class="db-matrix db-matrix--expandable"
+        id="db-matrix-full"
+        data-db-matrix-panel
+        hidden
+      >
+        {rows.map((row) => (
+          <div class="db-matrix__row">
+            <div class={`db-matrix__name db-matrix__name--${row.kind}`}>{row.name}</div>
+            <span class={`db-matrix__status db-matrix__status--${row.status}`}>
+              {statusLabel[row.status]}
+            </span>
+            <p class="db-matrix__detail">{row.detail}</p>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </section>
+
+<script define:vars={{ expandLabel, collapseLabel }}>
+  function initDbMatrixFold(root = document) {
+    root.querySelectorAll('[data-db-matrix-fold]').forEach((wrap) => {
+      if (wrap.dataset.ready === '1') return;
+      wrap.dataset.ready = '1';
+
+      const btn = wrap.querySelector('[data-db-matrix-toggle]');
+      const panel = wrap.querySelector('[data-db-matrix-panel]');
+      const label = wrap.querySelector('[data-db-matrix-toggle-label]');
+      if (!btn || !panel || !label) return;
+
+      btn.addEventListener('click', () => {
+        const open = btn.getAttribute('aria-expanded') === 'true';
+        const next = !open;
+        btn.setAttribute('aria-expanded', next ? 'true' : 'false');
+        panel.hidden = !next;
+        wrap.classList.toggle('db-matrix-fold--open', next);
+        label.textContent = next ? collapseLabel : expandLabel;
+      });
+    });
+  }
+
+  initDbMatrixFold();
+  document.addEventListener('astro:page-load', () => initDbMatrixFold());
+</script>

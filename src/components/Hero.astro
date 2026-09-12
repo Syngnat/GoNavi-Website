@@ -15,6 +15,13 @@ interface Props {
 const { locale, eyebrow, title, description, primary, secondary, highlights } = Astro.props;
 
 const primaryHref = primary.href.startsWith('/') ? withLocale(locale, primary.href.replace(/^\/(zh|en)/, '')) : primary.href;
+
+function highlightHref(label: string): string | null {
+  if (label.includes('30+') && (label.includes('数据源') || label.toLowerCase().includes('data source'))) {
+    return '#sources';
+  }
+  return null;
+}
 ---
 <section class="home-section-wrap home-section-wrap--hero">
   <div class="site-shell__inner">
@@ -37,7 +44,14 @@ const primaryHref = primary.href.startsWith('/') ? withLocale(locale, primary.hr
         </div>
 
         <div class="home-hero__highlights">
-          {highlights.map((h) => <span class="hero-tag">{h}</span>)}
+          {highlights.map((h) => {
+            const href = highlightHref(h);
+            return href ? (
+              <a class="hero-tag hero-tag--link" href={href}>{h}</a>
+            ) : (
+              <span class="hero-tag">{h}</span>
+            );
+          })}
         </div>
       </div>
     </div>
