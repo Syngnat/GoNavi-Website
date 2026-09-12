@@ -37,6 +37,7 @@ export const navCopy: Record<Locale, {
   home: string;
   download: string;
   docs: string;
+  blog: string;
   changelog: string;
   roadmap: string;
   brandTag: string;
@@ -45,6 +46,7 @@ export const navCopy: Record<Locale, {
     home: '首页',
     download: '下载',
     docs: '文档',
+    blog: '博客',
     changelog: '更新日志',
     roadmap: '路线图',
     brandTag: '数据库工作台',
@@ -53,6 +55,7 @@ export const navCopy: Record<Locale, {
     home: 'Home',
     download: 'Download',
     docs: 'Docs',
+    blog: 'Blog',
     changelog: 'Changelog',
     roadmap: 'Roadmap',
     brandTag: 'Database workbench',

@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { withLocale } from '../../../lib/i18n';
+import type { Locale } from '../../../lib/i18n';
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'zh' }, props: { locale: 'zh' } },
+    { params: { locale: 'en' }, props: { locale: 'en' } },
+  ];
+}
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const isZh = locale === 'zh';
+
+const posts = (await getCollection('blog'))
+  .filter((d) => d.data.locale === locale)
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+
+const copy = {
+  title: isZh ? '博客' : 'Blog',
+  description: isZh
+    ? 'GoNavi 产品博客：数据库客户端选型、轻量原生工具对比，以及 AI 写 SQL 后 GUI 仍不可少的实践观点。'
+    : 'GoNavi product blog on database client choices, lightweight native tools, and why a GUI still matters after AI can write SQL.',
+  eyebrow: isZh ? '产品博客' : 'Product blog',
+  readMore: isZh ? '阅读全文' : 'Read more',
+};
+---
+<BaseLayout locale={locale} title={copy.title} description={copy.description} current="/blog">
+  <div class="site-shell__inner page-wrap">
+    <section class="content-panel content-panel--docs">
+      <div class="content-panel__main">
+        <p class="content-panel__eyebrow">{copy.eyebrow}</p>
+        <h1 class="content-panel__title">{copy.title}</h1>
+        <p class="content-panel__copy">{copy.description}</p>
+      </div>
+    </section>
+
+    <div class="docs-index__grid docs-index__grid--standalone">
+      {posts.map((post, i) => (
+        <a class="docs-index__card docs-index__card--boxed" href={withLocale(locale, `/blog/${post.data.slug}`)}>
+          <span class="docs-index__card-index">{String(i + 1).padStart(2, '0')}</span>
+          <div class="docs-index__card-main">
+            <h2>{post.data.title}</h2>
+            {post.data.summary && <p>{post.data.summary}</p>}
+          </div>
+          <span class="docs-index__more">
+            {copy.readMore}
+            <span class="docs-index__more-arrow" aria-hidden="true">→</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

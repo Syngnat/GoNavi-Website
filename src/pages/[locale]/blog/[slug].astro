@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+import { withLocale } from '../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { locale: post.data.locale, slug: post.data.slug },
+  }));
+}
+
+const { locale, slug } = Astro.params as { locale: 'zh' | 'en'; slug: string };
+const [post] = (await getCollection('blog'))
+  .filter((d) => d.data.locale === locale && d.data.slug === slug);
+if (!post) throw new Error(`Blog post not found: ${locale}/${slug}`);
+const { Content } = await render(post);
+
+const all = (await getCollection('blog'))
+  .filter((d) => d.data.locale === locale)
+  .sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+
+const index = all.findIndex((d) => d.data.slug === slug);
+const prev = index > 0 ? all[index - 1] : null;
+const next = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
+
+const isZh = locale === 'zh';
+const copy = {
+  sidebarTitle: isZh ? '博客' : 'Blog',
+  backToIndex: isZh ? '全部文章' : 'All posts',
+  prev: isZh ? '上一篇' : 'Previous',
+  next: isZh ? '下一篇' : 'Next',
+};
+---
+<BaseLayout
+  locale={locale}
+  title={post.data.title}
+  description={post.data.summary}
+  current={`/blog/${slug}`}
+  article={{ section: locale === 'zh' ? 'GoNavi 博客' : 'GoNavi Blog' }}
+>
+  <div class="site-shell__inner page-wrap">
+    <div class="docs-layout">
+      <aside class="docs-sidebar">
+        <p class="docs-sidebar__title">{copy.sidebarTitle}</p>
+        <nav class="docs-sidebar__nav">
+          {all.map((d) => (
+            <a
+              class:list={['docs-sidebar__link', { 'docs-sidebar__link--active': d.data.slug === slug }]}
+              href={withLocale(locale, `/blog/${d.data.slug}`)}
+            >
+              {d.data.title}
+            </a>
+          ))}
+        </nav>
+        <a class="docs-sidebar__back" href={withLocale(locale, '/blog')}>
+          {copy.backToIndex}
+        </a>
+      </aside>
+
+      <article class="docs-article">
+        <header class="docs-article__header">
+          <div class="docs-article__heading">
+            <div class="docs-article__heading-copy">
+              <h1 class="docs-article__title">{post.data.title}</h1>
+              {post.data.summary && <p class="docs-article__summary">{post.data.summary}</p>}
+            </div>
+          </div>
+        </header>
+        <div class="docs-article__body">
+          <Content />
+        </div>
+
+        {(prev || next) && (
+          <nav class="docs-pager">
+            {prev ? (
+              <a class="docs-pager__item docs-pager__item--prev" href={withLocale(locale, `/blog/${prev.data.slug}`)}>
+                <span class="docs-pager__label">{copy.prev}</span>
+                <span class="docs-pager__title">{prev.data.title}</span>
+              </a>
+            ) : <span class="docs-pager__item docs-pager__item--placeholder" />}
+            {next ? (
+              <a class="docs-pager__item docs-pager__item--next" href={withLocale(locale, `/blog/${next.data.slug}`)}>
+                <span class="docs-pager__label">{copy.next}</span>
+                <span class="docs-pager__title">{next.data.title}</span>
+              </a>
+            ) : <span class="docs-pager__item docs-pager__item--placeholder" />}
+          </nav>
+        )}
+      </article>
+    </div>
+  </div>
+</BaseLayout>
