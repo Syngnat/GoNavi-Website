@@ -11,7 +11,7 @@ order: 1
 
 ## 人们为什么离开 TablePlus
 
-TablePlus 靠干净、快的 SQL 客户端口碑起家。*TablePlus alternative* 这类搜索通常来得更晚——不是嫌界面丑，而是碰到了限制。
+TablePlus 靠干净、快的 SQL 客户端口碑起家。「TablePlus 替代」 这类搜索通常来得更晚——不是嫌界面丑，而是碰到了限制。
 
 近一个月社区帖子里，反复出现同一批离场理由：
 
