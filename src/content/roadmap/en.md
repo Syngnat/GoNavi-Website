@@ -1,16 +1,15 @@
 ---
-title: Product and website roadmap
-description: Follow the work in progress and what comes next for GoNavi.
+title: Product roadmap
+description: See what GoNavi is building next.
 locale: en
 lanes:
-  - title: In Progress
+  - title: In progress
     items:
-      - First website release structure
-      - Release-backed download and changelog pages
-      - Bilingual documentation baseline
-  - title: Planned
+      - Multi-source session workbench (view and stop running queries; more engines over time; unsupported engines are clearly marked)
+      - OceanBase dual-mode session support
+  - title: Coming next
     items:
-      - A deeper database capability matrix
-      - Platform-aware download recommendations
-      - Full docs navigation and search
+      - Lock-wait panel (see who is waiting, and on whom)
+      - One-click charts from query results
+      - Clearer execution plans so slow SQL is easier to read
 ---
