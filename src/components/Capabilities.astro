@@ -1,0 +1,106 @@
+---
+interface Item {
+  id: string;
+  title: string;
+  summary: string;
+  points: string[];
+  image: string;
+  alt: string;
+  zoom: number;
+  x: number;
+  y: number;
+}
+
+interface Props {
+  data: {
+    kicker: string;
+    title: string;
+    description: string;
+    items: Item[];
+  };
+}
+
+const { data } = Astro.props;
+const cropStyle = (item: Item) => `--zoom:${item.zoom};--x:${item.x};--y:${item.y}`;
+---
+<section class="section section--sunken" id="features">
+  <div class="site-shell__inner">
+    <header class="section-head">
+      <p class="section-kicker">{data.kicker}</p>
+      <h2 class="section-title">{data.title}</h2>
+      <p class="section-desc">{data.description}</p>
+    </header>
+
+    <div class="caps" data-caps>
+      <div class="caps__list">
+        {data.items.map((item, index) => (
+          <div class="cap" data-cap data-open={index === 0 ? '' : undefined}>
+            <h3 class="cap__heading">
+              <button
+                type="button"
+                class="cap__trigger"
+                id={`cap-trigger-${item.id}`}
+                aria-expanded={index === 0 ? 'true' : 'false'}
+                aria-controls={`cap-panel-${item.id}`}
+                data-cap-trigger
+              >
+                <span>{item.title}</span>
+                <svg class="cap__chevron" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m4.5 6.75 4.5 4.5 4.5-4.5" />
+                </svg>
+              </button>
+            </h3>
+            <div class="cap__panel" id={`cap-panel-${item.id}`} role="region" aria-labelledby={`cap-trigger-${item.id}`}>
+              <div class="cap__panel-inner">
+                <p class="cap__summary">{item.summary}</p>
+                <ul class="cap__points">
+                  {item.points.map((point) => <li>{point}</li>)}
+                </ul>
+                <figure class="cap__shot cap__shot--inline" style={cropStyle(item)}>
+                  <img src={item.image} alt={item.alt} width="1440" height="900" loading="lazy" decoding="async" />
+                </figure>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Large-screen viewer. It repeats the inline figures above, so it stays out of the accessibility tree. -->
+      <div class="caps__viewer" aria-hidden="true">
+        {data.items.map((item, index) => (
+          <figure class="cap__shot" style={cropStyle(item)} data-cap-shot data-active={index === 0 ? '' : undefined}>
+            <img src={item.image} alt="" width="1440" height="900" loading="lazy" decoding="async" />
+          </figure>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initCaps(root: HTMLElement) {
+    if (root.dataset.ready === '1') return;
+    root.dataset.ready = '1';
+
+    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-cap]'));
+    const shots = Array.from(root.querySelectorAll<HTMLElement>('[data-cap-shot]'));
+
+    const open = (index: number) => {
+      items.forEach((item, i) => {
+        const isOpen = i === index;
+        item.toggleAttribute('data-open', isOpen);
+        item.querySelector('[data-cap-trigger]')?.setAttribute('aria-expanded', String(isOpen));
+      });
+      shots.forEach((shot, i) => shot.toggleAttribute('data-active', i === index));
+    };
+
+    items.forEach((item, index) => {
+      // One panel is always open: the viewer beside the list needs something to show.
+      item.querySelector('[data-cap-trigger]')?.addEventListener('click', () => open(index));
+    });
+  }
+
+  const initAllCaps = () => document.querySelectorAll<HTMLElement>('[data-caps]').forEach(initCaps);
+  initAllCaps();
+  document.addEventListener('astro:page-load', initAllCaps);
+</script>

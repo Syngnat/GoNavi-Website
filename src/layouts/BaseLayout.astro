@@ -1,9 +1,13 @@
 ---
+import '@fontsource-variable/overpass/wght.css';
+import '@fontsource-variable/overpass-mono/wght.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import '../styles/layout.css';
+import '../styles/pages.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import ThemePreview from '../components/ThemePreview.astro';
 import type { Locale } from '../lib/i18n';
 import { GITHUB_URL, stripLocale, withLocale } from '../lib/i18n';
 import { isAnalyticsEnabled } from '../lib/analytics';
@@ -20,7 +24,7 @@ interface Props {
 }
 
 const { locale, title, description, current = '/', article } = Astro.props;
-const siteTitle = title ? `${title} · GoNavi` : 'GoNavi — Navigate every data source';
+const siteTitle = title ? `${title} · GoNavi` : 'GoNavi — open-source database client';
 const siteUrl = Astro.site ?? new URL('http://localhost:4173');
 const canonical = new URL(Astro.url.pathname, siteUrl);
 const routePath = stripLocale(Astro.url.pathname);
@@ -104,8 +108,8 @@ const structuredData = JSON.stringify({
       image: socialImage.href,
       operatingSystem: 'Windows, macOS, Linux',
       featureList: locale === 'zh'
-        ? ['30+ 数据源', '原生桌面工作台', 'SQL 查询与结果比对', 'AI 助手']
-        : ['30+ data sources', 'Native desktop workbench', 'SQL queries and result comparison', 'AI assistant'],
+        ? ['50+ 数据源', '原生桌面工作台', 'SQL 查询与数据编辑', 'AI 助手与 MCP', 'SQL 审计']
+        : ['50+ data sources', 'Native desktop workbench', 'SQL queries and data editing', 'AI assistant and MCP', 'SQL audit'],
       inLanguage: language,
       publisher: { '@id': new URL('/#organization', siteUrl).href },
     }] : []),
@@ -149,6 +153,7 @@ const structuredData = JSON.stringify({
     <link rel="alternate" hreflang="x-default" href={zhAlternate} />
     <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
     <link rel="icon" type="image/webp" href="/logo.webp?v=20260906" sizes="512x512" />
+    <meta name="theme-color" content="#fafaf8" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content="GoNavi" />
@@ -166,6 +171,15 @@ const structuredData = JSON.stringify({
     <meta name="twitter:image" content={socialImage} />
     <meta name="twitter:image:alt" content={socialImageAlt} />
     <script type="application/ld+json" set:html={structuredData}></script>
+    {import.meta.env.DEV && (
+      <script is:inline>
+        // Dev-only: re-apply the palette picked in ThemePreview before first paint.
+        try {
+          var previewTheme = localStorage.getItem('gonavi-theme-preview');
+          if (previewTheme && previewTheme !== 'default') document.documentElement.dataset.theme = previewTheme;
+        } catch (e) {}
+      </script>
+    )}
     {isAnalyticsEnabled && (
       <script>
         import { trackPageView } from '../lib/analytics-client';
@@ -175,12 +189,14 @@ const structuredData = JSON.stringify({
     )}
   </head>
   <body>
+    <a class="skip-link" href="#main">{locale === 'zh' ? '跳到正文' : 'Skip to content'}</a>
     <div class="site-shell">
       <SiteHeader locale={locale} current={current} />
-      <main class="site-main">
+      <main class="site-main" id="main">
         <slot />
       </main>
       <SiteFooter locale={locale} />
     </div>
+    {import.meta.env.DEV && <ThemePreview />}
   </body>
 </html>

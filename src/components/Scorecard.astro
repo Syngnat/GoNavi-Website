@@ -1,0 +1,78 @@
+---
+import type { Locale } from '../lib/i18n';
+import { withLocale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  data: {
+    kicker: string;
+    title: string;
+    description: string;
+    sample: string;
+    metrics: { label: string; question: string; value: string; note: string }[];
+    compare: {
+      caption: string;
+      other: string;
+      rows: { label: string; other: string; gonavi: string }[];
+    };
+    method: string;
+    methodLink: { label: string; href: string };
+  };
+}
+
+const { locale, data } = Astro.props;
+---
+<section class="section" id="why">
+  <div class="site-shell__inner scorecard">
+    <header class="section-head scorecard__head">
+      <p class="section-kicker">{data.kicker}</p>
+      <h2 class="section-title">{data.title}</h2>
+      <p class="section-desc">{data.description}</p>
+    </header>
+
+    <div class="scorecard__sheet">
+      <p class="scorecard__sample">{data.sample}</p>
+
+      <dl class="scorecard__metrics">
+        {data.metrics.map((metric) => (
+          <div class="scorecard__metric">
+            <dt class="scorecard__metric-label">
+              <span>{metric.label}</span>
+              <span class="scorecard__metric-question">{metric.question}</span>
+            </dt>
+            <dd class="scorecard__metric-body">
+              <span class="scorecard__metric-value">{metric.value}</span>
+              <span class="scorecard__metric-note">{metric.note}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <table class="scorecard__compare">
+        <caption class="sr-only">{data.compare.caption}</caption>
+        <thead>
+          <tr>
+            <td></td>
+            <th scope="col">{data.compare.other}</th>
+            <th scope="col" class="scorecard__compare-us">GoNavi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.compare.rows.map((row) => (
+            <tr>
+              <th scope="row">{row.label}</th>
+              <td data-label={data.compare.other}>{row.other}</td>
+              <td class="scorecard__compare-us" data-label="GoNavi">{row.gonavi}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <p class="scorecard__method">
+        {data.method}
+        {' '}
+        <a class="text-link" href={withLocale(locale, data.methodLink.href)}>{data.methodLink.label}</a>
+      </p>
+    </div>
+  </div>
+</section>

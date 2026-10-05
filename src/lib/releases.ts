@@ -28,6 +28,8 @@ export interface NormalizedReleaseAsset {
   size: number | null;
   updatedAt: string | null;
   platform: ReleaseAssetPlatform;
+  /** The headless `gonavi-cli_*` archives ship in the same release as the desktop app. */
+  cli: boolean;
 }
 
 export interface NormalizedRelease {
@@ -40,6 +42,8 @@ export interface NormalizedRelease {
   draft: boolean;
   prerelease: boolean;
   assets: NormalizedReleaseAsset[];
+  /** SHA256SUMS and similar files, kept apart because they are not installers. */
+  checksums: { name: string; url: string }[];
 }
 
 const PLATFORM_RULES: Array<{ platform: ReleasePlatform; patterns: RegExp[] }> = [
@@ -48,7 +52,9 @@ const PLATFORM_RULES: Array<{ platform: ReleasePlatform; patterns: RegExp[] }> =
   { platform: 'linux', patterns: [/linux/i, /appimage/i, /\.deb$/i, /\.rpm$/i, /\.tar\.gz$/i, /\.tgz$/i] },
 ];
 
-const SKIP_PATTERNS = /checksum|sha256|sha512|signature|\.sig$|\.asc$|readme|source/i;
+const SKIP_PATTERNS = /checksum|sha256|sha512|signature|\.sig$|\.asc$|readme|source|^latest\.json$|^license$|^notice$/i;
+const CHECKSUM_PATTERN = /sha256sums|checksums/i;
+const CLI_PATTERN = /^gonavi-cli[_-]/i;
 
 function toText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -95,9 +101,15 @@ export function normalizeRelease(input: ReleaseLike): NormalizedRelease {
             size: typeof a.size === 'number' && Number.isFinite(a.size) ? a.size : null,
             updatedAt: toText(a.updated_at) || null,
             platform: classifyAsset(assetName),
+            cli: CLI_PATTERN.test(assetName),
           };
         })
         .filter((a): a is NormalizedReleaseAsset => a !== null)
+    : [];
+  const checksums = Array.isArray(input.assets)
+    ? input.assets
+        .map((a) => ({ name: toText(a.name), url: toText(a.browser_download_url) }))
+        .filter((a) => a.name && a.url && CHECKSUM_PATTERN.test(a.name))
     : [];
 
   return {
@@ -110,6 +122,7 @@ export function normalizeRelease(input: ReleaseLike): NormalizedRelease {
     draft: Boolean(input.draft),
     prerelease: Boolean(input.prerelease),
     assets,
+    checksums,
   };
 }
 
@@ -119,7 +132,7 @@ export function pickPrimaryAsset(
   platform: ReleasePlatform,
   preferredArch?: 'x64' | 'arm64' | null,
 ): NormalizedReleaseAsset | null {
-  const candidates = assets.filter((a) => a.platform === platform);
+  const candidates = assets.filter((a) => a.platform === platform && !a.cli);
   if (candidates.length === 0) return null;
   const sorted = candidates
     .slice()
@@ -152,6 +165,57 @@ export function detectFormat(name: string): string | null {
   return null;
 }
 
+export type DesktopArch = 'x64' | 'arm64';
+
+/**
+ * What a desktop installer is, read from its file name, e.g.
+ * GoNavi-1.1.0-Windows-Arm64-Portable.zip -> { arch: 'arm64', kind: 'portable-zip' }.
+ * Kinds: installer, portable-exe, portable-zip (Windows); dmg (macOS);
+ * webkit41, webkit40 (Linux x64, by WebKitGTK version); tarball (other Linux builds).
+ */
+export interface DesktopVariant {
+  asset: NormalizedReleaseAsset;
+  arch: DesktopArch;
+  kind: string;
+}
+
+const KIND_ORDER = ['installer', 'portable-exe', 'portable-zip', 'dmg', 'webkit41', 'webkit40', 'tarball'];
+
+export function desktopVariants(assets: NormalizedReleaseAsset[], platform: ReleasePlatform): DesktopVariant[] {
+  return assets
+    .filter((asset) => asset.platform === platform && !asset.cli)
+    .map((asset) => {
+      const name = asset.name;
+      const arch: DesktopArch = detectArch(name) === 'arm64' ? 'arm64' : 'x64';
+      let kind = 'tarball';
+      if (platform === 'windows') {
+        if (/installer|\.msi$/i.test(name)) kind = 'installer';
+        else if (/\.exe$/i.test(name)) kind = 'portable-exe';
+        else kind = 'portable-zip';
+      } else if (platform === 'macos') {
+        kind = 'dmg';
+      } else if (/webkit-?41/i.test(name)) {
+        kind = 'webkit41';
+      } else if (arch === 'x64') {
+        // The unsuffixed x64 Linux build links against WebKitGTK 4.0.
+        kind = 'webkit40';
+      }
+      return { asset, arch, kind };
+    })
+    // Most Macs in use are Apple silicon, so ARM leads there; x64 leads everywhere else.
+    .sort((l, r) => (l.arch === r.arch ? 0 : (l.arch === 'x64') !== (platform === 'macos') ? -1 : 1)
+      || KIND_ORDER.indexOf(l.kind) - KIND_ORDER.indexOf(r.kind)
+      || l.asset.name.localeCompare(r.asset.name));
+}
+
+/** The installer to offer first on a platform for a given CPU architecture. */
+export function recommendedVariant(variants: DesktopVariant[], arch: DesktopArch): DesktopVariant | null {
+  const sameArch = variants.filter((variant) => variant.arch === arch);
+  return sameArch.find((variant) => ['installer', 'dmg', 'webkit41'].includes(variant.kind))
+    ?? sameArch[0]
+    ?? null;
+}
+
 export function formatSize(size: number | null): string {
   if (size === null) return '';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -165,8 +229,24 @@ export function formatSize(size: number | null): string {
   return `${r} ${units[i]}`;
 }
 
-/** Called from Astro pages at build time. */
-export async function fetchReleases(perPage = 20): Promise<NormalizedRelease[]> {
+const releasesCache = new Map<number, Promise<NormalizedRelease[]>>();
+
+/**
+ * Called from Astro pages at build time. Memoised per page size so the header,
+ * home, download and changelog pages share one GitHub request per build; a
+ * failed request is dropped from the cache so the next caller retries.
+ */
+export function fetchReleases(perPage = 20): Promise<NormalizedRelease[]> {
+  let pending = releasesCache.get(perPage);
+  if (!pending) {
+    pending = requestReleases(perPage);
+    releasesCache.set(perPage, pending);
+    pending.catch(() => releasesCache.delete(perPage));
+  }
+  return pending;
+}
+
+async function requestReleases(perPage: number): Promise<NormalizedRelease[]> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), 15_000);
   try {
@@ -190,6 +270,12 @@ export async function fetchReleases(perPage = 20): Promise<NormalizedRelease[]> 
 /** Convenience: latest non-prerelease release. */
 export function latestRelease(releases: NormalizedRelease[]): NormalizedRelease | null {
   return releases.find((r) => !r.prerelease) ?? releases[0] ?? null;
+}
+
+/** Compact count for stars / downloads: 2061 -> "2.1k". */
+export function formatCount(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
 }
 
 export interface GitHubStats {

@@ -34,34 +34,25 @@ export function swapLocale(pathname: string, next: Locale): string {
 }
 
 export const navCopy: Record<Locale, {
-  home: string;
   download: string;
   docs: string;
   blog: string;
   changelog: string;
   roadmap: string;
-  more: string;
-  brandTag: string;
 }> = {
   zh: {
-    home: '首页',
     download: '下载',
     docs: '文档',
     blog: '博客',
     changelog: '更新日志',
     roadmap: '路线图',
-    more: '更多',
-    brandTag: '数据库工作台',
   },
   en: {
-    home: 'Home',
     download: 'Download',
     docs: 'Docs',
     blog: 'Blog',
     changelog: 'Changelog',
     roadmap: 'Roadmap',
-    more: 'More',
-    brandTag: 'Database workbench',
   },
 };
 
@@ -81,7 +72,7 @@ export const footerCopy: Record<Locale, {
   wechatCopyFailed: string;
 }> = {
   zh: {
-    copy: 'GoNavi — 原生数据库工作台。基于 Wails 与 React。',
+    copy: '开源的跨平台数据库客户端，用 Go（Wails）和 React 构建。',
     product: '产品',
     resources: '资源',
     community: '社区',
@@ -96,7 +87,7 @@ export const footerCopy: Record<Locale, {
     wechatCopyFailed: '复制失败，请手动复制',
   },
   en: {
-    copy: 'GoNavi — a native database workbench built with Wails and React.',
+    copy: 'An open-source, cross-platform database client built with Go (Wails) and React.',
     product: 'Product',
     resources: 'Resources',
     community: 'Community',

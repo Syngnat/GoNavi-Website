@@ -1,0 +1,288 @@
+---
+import type { Locale } from '../lib/i18n';
+
+interface Shot {
+  id: string;
+  label: string;
+  caption: string;
+  image: string;
+}
+
+interface Props {
+  locale: Locale;
+  label: string;
+  note: string;
+  shots: Shot[];
+}
+
+const { locale, label, note, shots } = Astro.props;
+const isZh = locale === 'zh';
+const copy = {
+  pause: isZh ? '暂停自动播放' : 'Pause autoplay',
+  play: isZh ? '继续自动播放' : 'Resume autoplay',
+  zoom: isZh ? '放大查看' : 'View full size',
+  zoomHint: isZh ? '点击截图放大' : 'Click the screenshot to enlarge',
+  close: isZh ? '关闭' : 'Close',
+  previous: isZh ? '上一张' : 'Previous',
+  next: isZh ? '下一张' : 'Next',
+  shotAlt: (shot: Shot) => (isZh ? `GoNavi 截图：${shot.label}，${shot.caption}` : `GoNavi screenshot: ${shot.label}. ${shot.caption}`),
+};
+---
+<div class="tour" data-tour data-pause-label={copy.pause} data-play-label={copy.play}>
+  <div class="tile tour__stage">
+    <div class="tour__bar">
+      <div class="tour__tabs" role="tablist" aria-label={label} data-tour-tabs>
+        {shots.map((shot, index) => (
+          <button
+            type="button"
+            role="tab"
+            class="tour__tab"
+            id={`tour-tab-${shot.id}`}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            aria-controls={`tour-panel-${shot.id}`}
+            tabindex={index === 0 ? 0 : -1}
+            data-tour-tab
+          >
+            {shot.label}
+            <span class="tour__tab-progress" aria-hidden="true"></span>
+          </button>
+        ))}
+      </div>
+
+      <button type="button" class="tour__toggle" aria-label={copy.pause} data-tour-toggle hidden>
+        <svg class="tour__toggle-pause" width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+          <rect x="2.5" y="2" width="3" height="10" rx="0.75" />
+          <rect x="8.5" y="2" width="3" height="10" rx="0.75" />
+        </svg>
+        <svg class="tour__toggle-play" width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+          <path d="M3.5 2.3v9.4a.6.6 0 0 0 .92.5l7.3-4.7a.6.6 0 0 0 0-1L4.42 1.8a.6.6 0 0 0-.92.5Z" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="tour__window">
+      {shots.map((shot, index) => (
+        <div
+          class="tour__panel"
+          role="tabpanel"
+          id={`tour-panel-${shot.id}`}
+          aria-labelledby={`tour-tab-${shot.id}`}
+          data-tour-panel
+          data-active={index === 0 ? '' : undefined}
+        >
+          <button type="button" class="tour__zoom" aria-label={`${copy.zoom}：${shot.label}`} data-tour-zoom>
+            {index === 0 ? (
+              <img src={shot.image} alt={copy.shotAlt(shot)} width="1440" height="900" decoding="async" fetchpriority="high" />
+            ) : (
+              <img data-src={shot.image} alt={copy.shotAlt(shot)} width="1440" height="900" decoding="async" />
+            )}
+          </button>
+        </div>
+      ))}
+    </div>
+
+    <div class="tour__foot">
+      <p class="tour__caption">
+        {shots.map((shot, index) => (
+          <span class="tour__caption-item" data-tour-caption hidden={index !== 0}>
+            <strong>{shot.label}</strong>
+            <span>{shot.caption}</span>
+          </span>
+        ))}
+      </p>
+      <p class="tour__hint">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9" />
+        </svg>
+        {copy.zoomHint}
+      </p>
+    </div>
+  </div>
+
+  <p class="tour__note">{note}</p>
+
+  <dialog class="lightbox" aria-label={label} data-tour-lightbox>
+    <div class="lightbox__bar">
+      <p class="lightbox__title" data-lightbox-title></p>
+      <span class="lightbox__count" data-lightbox-count></span>
+      <button type="button" class="lightbox__btn" aria-label={copy.previous} data-lightbox-prev>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 3.5 5.5 9l5.5 5.5" />
+        </svg>
+      </button>
+      <button type="button" class="lightbox__btn" aria-label={copy.next} data-lightbox-next>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 3.5 12.5 9 7 14.5" />
+        </svg>
+      </button>
+      <button type="button" class="lightbox__btn lightbox__close" aria-label={copy.close} autofocus data-lightbox-close>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+          <path d="m4 4 10 10M14 4 4 14" />
+        </svg>
+      </button>
+    </div>
+    <div class="lightbox__body">
+      <img class="lightbox__image" alt="" width="1440" height="900" data-lightbox-image />
+    </div>
+  </dialog>
+</div>
+
+<script>
+  function initTour(root: HTMLElement) {
+    if (root.dataset.ready === '1') return;
+    root.dataset.ready = '1';
+
+    const tablist = root.querySelector<HTMLElement>('[data-tour-tabs]');
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tour-tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-tour-panel]'));
+    const captions = Array.from(root.querySelectorAll<HTMLElement>('[data-tour-caption]'));
+    const toggle = root.querySelector<HTMLButtonElement>('[data-tour-toggle]');
+    const stage = root.querySelector<HTMLElement>('.tour__stage');
+    const lightbox = root.querySelector<HTMLDialogElement>('[data-tour-lightbox]');
+    if (!tablist || !stage || tabs.length === 0 || tabs.length !== panels.length) return;
+
+    const images = panels.map((panel) => panel.querySelector<HTMLImageElement>('img'));
+    let active = 0;
+
+    const ensureLoaded = (index: number) => {
+      const image = images[(index + images.length) % images.length];
+      if (image?.dataset.src) {
+        image.src = image.dataset.src;
+        delete image.dataset.src;
+      }
+    };
+
+    const show = (index: number, { focus = false } = {}) => {
+      active = (index + tabs.length) % tabs.length;
+      ensureLoaded(active);
+      ensureLoaded(active + 1);
+
+      tabs.forEach((tab, i) => {
+        const selected = i === active;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+      panels.forEach((panel, i) => panel.toggleAttribute('data-active', i === active));
+      captions.forEach((caption, i) => { caption.hidden = i !== active; });
+
+      // Keep the active tab visible when the strip scrolls sideways, without moving the page.
+      const tab = tabs[active];
+      const left = tab.offsetLeft - (tablist.clientWidth - tab.offsetWidth) / 2;
+      tablist.scrollTo({ left, behavior: 'smooth' });
+      if (focus) tab.focus({ preventScroll: true });
+    };
+
+    /* ---- Autoplay: the progress bar's own animation is the timer. ---- */
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const holds = new Set<string>();
+    const syncPaused = () => root.toggleAttribute('data-paused', holds.size > 0);
+    const hold = (reason: string, on: boolean) => {
+      if (on) holds.add(reason);
+      else holds.delete(reason);
+      syncPaused();
+    };
+
+    const setPlaying = (playing: boolean) => {
+      root.toggleAttribute('data-playing', playing);
+      if (toggle) toggle.setAttribute('aria-label', (playing ? root.dataset.pauseLabel : root.dataset.playLabel) ?? '');
+    };
+
+    if (!reducedMotion) {
+      if (toggle) toggle.hidden = false;
+      setPlaying(true);
+      // The first advance is seconds away; fetch the next screenshot before it is needed.
+      window.setTimeout(() => ensureLoaded(1), 1500);
+
+      root.addEventListener('animationend', (event) => {
+        if ((event.target as HTMLElement).classList.contains('tour__tab-progress')) show(active + 1);
+      });
+      toggle?.addEventListener('click', () => setPlaying(!root.hasAttribute('data-playing')));
+
+      stage.addEventListener('mouseenter', () => hold('hover', true));
+      stage.addEventListener('mouseleave', () => hold('hover', false));
+      stage.addEventListener('focusin', () => hold('focus', true));
+      stage.addEventListener('focusout', (event) => {
+        if (!stage.contains(event.relatedTarget as Node | null)) hold('focus', false);
+      });
+      document.addEventListener('visibilitychange', () => hold('hidden', document.visibilityState !== 'visible'));
+
+      if ('IntersectionObserver' in window) {
+        hold('offscreen', true);
+        new IntersectionObserver(
+          (entries) => entries.forEach((entry) => hold('offscreen', !entry.isIntersecting)),
+          { threshold: 0.35 },
+        ).observe(stage);
+      }
+    }
+
+    /* ---- Tabs ---- */
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => {
+        // Choosing a view by hand means the visitor is driving now.
+        setPlaying(false);
+        show(index);
+      });
+    });
+
+    tablist.addEventListener('keydown', (event) => {
+      const moves: Record<string, number> = {
+        ArrowRight: active + 1,
+        ArrowLeft: active - 1,
+        Home: 0,
+        End: tabs.length - 1,
+      };
+      if (!(event.key in moves)) return;
+      event.preventDefault();
+      setPlaying(false);
+      show(moves[event.key], { focus: true });
+    });
+
+    /* ---- Lightbox ---- */
+    if (!lightbox) return;
+    const image = lightbox.querySelector<HTMLImageElement>('[data-lightbox-image]');
+    const title = lightbox.querySelector<HTMLElement>('[data-lightbox-title]');
+    const count = lightbox.querySelector<HTMLElement>('[data-lightbox-count]');
+    if (!image || !title || !count) return;
+
+    const renderLightbox = () => {
+      const source = images[active];
+      const caption = captions[active];
+      if (!source) return;
+      image.src = source.currentSrc || source.src;
+      image.alt = source.alt;
+      title.replaceChildren(...Array.from(caption?.children ?? []).map((node) => node.cloneNode(true)));
+      count.textContent = `${active + 1} / ${tabs.length}`;
+    };
+
+    const step = (delta: number) => {
+      show(active + delta);
+      renderLightbox();
+    };
+
+    root.querySelectorAll<HTMLButtonElement>('[data-tour-zoom]').forEach((button, index) => {
+      button.addEventListener('click', () => {
+        setPlaying(false);
+        show(index);
+        renderLightbox();
+        lightbox.showModal();
+      });
+    });
+
+    lightbox.querySelector('[data-lightbox-prev]')?.addEventListener('click', () => step(-1));
+    lightbox.querySelector('[data-lightbox-next]')?.addEventListener('click', () => step(1));
+    lightbox.querySelector('[data-lightbox-close]')?.addEventListener('click', () => lightbox.close());
+    // A click that lands on the dialog element itself is a click on the backdrop.
+    lightbox.addEventListener('click', (event) => {
+      if (event.target === lightbox) lightbox.close();
+    });
+    lightbox.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight') step(1);
+      if (event.key === 'ArrowLeft') step(-1);
+    });
+    lightbox.addEventListener('close', () => tabs[active]?.focus({ preventScroll: true }));
+  }
+
+  const initTours = () => document.querySelectorAll<HTMLElement>('[data-tour]').forEach(initTour);
+  initTours();
+  document.addEventListener('astro:page-load', initTours);
+</script>

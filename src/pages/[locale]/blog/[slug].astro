@@ -125,6 +125,22 @@ const copy = {
               apply(mql.matches);
             };
 
+            // Mark the section currently being read: the last heading that has passed under the header.
+            const links = Array.from(list.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'));
+            const headings = links.map((link) => document.getElementById(decodeURIComponent(link.hash.slice(1))));
+            let ticking = false;
+            const syncCurrent = () => {
+              ticking = false;
+              let current = -1;
+              headings.forEach((heading, i) => {
+                if (heading && heading.getBoundingClientRect().top <= 120) current = i;
+              });
+              links.forEach((link, i) => {
+                if (i === current) link.setAttribute('aria-current', 'true');
+                else link.removeAttribute('aria-current');
+              });
+            };
+
             if (nav.dataset.tocReady !== '1') {
               nav.dataset.tocReady = '1';
               btn.addEventListener('click', () => {
@@ -133,8 +149,14 @@ const copy = {
                 apply(open);
               });
               mql.addEventListener('change', sync);
+              window.addEventListener('scroll', () => {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(syncCurrent);
+              }, { passive: true });
             }
             sync();
+            syncCurrent();
           });
         }
 

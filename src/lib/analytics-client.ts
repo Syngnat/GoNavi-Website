@@ -70,6 +70,10 @@ export function trackPageView() {
   sendEvent({ referrer: referrerHost() });
 }
 
+export function trackDownload(fileName: string, platform: string) {
+  sendEvent({ action: 'download', file: fileName, platform });
+}
+
 export function trackSponsorImpression(sponsorId: string) {
   sendEvent({
     action: 'sponsor_impression',

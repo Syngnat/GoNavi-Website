@@ -1,59 +1,126 @@
 ---
 import type { Locale } from '../lib/i18n';
-import { withLocale } from '../lib/i18n';
+import { GITHUB_URL, withLocale } from '../lib/i18n';
+import { fetchGitHubStats, fetchReleases, formatCount, latestRelease, type NormalizedRelease } from '../lib/releases';
+import ProductTour from './ProductTour.astro';
 
 interface Props {
   locale: Locale;
-  eyebrow: string;
-  title: string;
-  description: string;
-  primary: { label: string; href: string };
-  secondary: { label: string; href: string };
-  highlights: string[];
+  hero: {
+    headline: string[];
+    lede: string;
+    download: string;
+    facts: { label: string; href?: string }[];
+  };
+  tour: {
+    label: string;
+    note: string;
+    shots: { id: string; label: string; caption: string; image: string }[];
+  };
 }
 
-const { locale, eyebrow, title, description, primary, secondary, highlights } = Astro.props;
+const { locale, hero, tour } = Astro.props;
+const isZh = locale === 'zh';
+const stats = await fetchGitHubStats();
 
-const primaryHref = primary.href.startsWith('/') ? withLocale(locale, primary.href.replace(/^\/(zh|en)/, '')) : primary.href;
-
-function highlightHref(label: string): string | null {
-  if (label.includes('30+') && (label.includes('数据源') || label.toLowerCase().includes('data source'))) {
-    return '#sources';
-  }
-  return null;
+let release: NormalizedRelease | null = null;
+try {
+  release = latestRelease(await fetchReleases());
+} catch {
+  // The release line is optional; the hero reads fine without it.
 }
+
+const releaseDate = (() => {
+  if (!release?.publishedAt) return null;
+  const date = new Date(release.publishedAt);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(isZh ? 'zh-CN' : 'en-US', { dateStyle: 'medium' }).format(date);
+})();
+
+const copy = {
+  release: isZh ? '最新版本' : 'Latest release',
+  downloads: isZh ? '次下载' : 'downloads',
+  platformLabels: isZh
+    ? { windows: '下载 Windows 版', macos: '下载 macOS 版', linux: '下载 Linux 版' }
+    : { windows: 'Download for Windows', macos: 'Download for macOS', linux: 'Download for Linux' },
+};
 ---
-<section class="home-section-wrap home-section-wrap--hero">
+<section class="hero">
   <div class="site-shell__inner">
-    <div class="home-hero home-hero--stacked">
-      <div class="home-hero__content">
-        <div>
-          <p class="section-eyebrow">{eyebrow}</p>
-          <h1 class="home-hero__title">{title}</h1>
-        </div>
-        <p class="home-hero__desc">{description}</p>
-
-        <div class="home-hero__cta-row">
-          <a class="home-cta home-cta--primary" href={primaryHref}>{primary.label}</a>
-          <a class="home-cta home-cta--secondary" href={secondary.href} rel="noreferrer" target="_blank">
-            {secondary.label}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M7 17L17 7M17 7H7M17 7V17" />
+    <div class="hero__head">
+      <div class="hero__lead">
+        {release && release.id !== null && (
+          <a class="hero__release" href={withLocale(locale, '/changelog')}>
+            <span class="hero__release-tag">{release.tag}</span>
+            <span>{copy.release}{releaseDate ? ` · ${releaseDate}` : ''}</span>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3.5 8h9M8.5 4l4 4-4 4" />
             </svg>
+          </a>
+        )}
+        <h1 class="hero__title">
+          {hero.headline.map((line) => <span class="hero__title-line">{line}</span>)}
+        </h1>
+      </div>
+
+      <div class="hero__aside">
+        <p class="hero__lede">{hero.lede}</p>
+
+        <div class="hero__actions">
+          <a
+            class="btn btn--primary btn--lg"
+            href={withLocale(locale, '/download')}
+            data-download-cta
+            data-label-windows={copy.platformLabels.windows}
+            data-label-macos={copy.platformLabels.macos}
+            data-label-linux={copy.platformLabels.linux}
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" />
+            </svg>
+            <span data-download-label>{hero.download}</span>
+          </a>
+          <a class="btn btn--secondary btn--lg" href={GITHUB_URL} rel="noreferrer" target="_blank">
+            GitHub
+            {stats.stars > 0 && <span class="btn__meta">★ {formatCount(stats.stars)}</span>}
           </a>
         </div>
 
-        <div class="home-hero__highlights">
-          {highlights.map((h) => {
-            const href = highlightHref(h);
-            return href ? (
-              <a class="hero-tag hero-tag--link" href={href}>{h}</a>
-            ) : (
-              <span class="hero-tag">{h}</span>
-            );
-          })}
-        </div>
+        <ul class="hero__facts">
+          {hero.facts.map((fact) => (
+            <li>
+              {fact.href ? <a href={fact.href}>{fact.label}</a> : fact.label}
+            </li>
+          ))}
+          {stats.totalDownloads > 0 && (
+            <li>{formatCount(stats.totalDownloads)} {copy.downloads}</li>
+          )}
+        </ul>
       </div>
     </div>
+
+    <ProductTour locale={locale} label={tour.label} note={tour.note} shots={tour.shots} />
   </div>
 </section>
+
+<script>
+  // Name the visitor's platform on the download button; the link itself always goes to the
+  // download page, which picks the right installer and architecture.
+  function detectPlatform(): 'windows' | 'macos' | 'linux' | null {
+    const ua = navigator.userAgent;
+    if (/android|iphone|ipad|ipod/i.test(ua)) return null;
+    if (/windows/i.test(ua)) return 'windows';
+    if (/mac(os)?|darwin/i.test(ua)) return 'macos';
+    if (/linux|x11/i.test(ua)) return 'linux';
+    return null;
+  }
+
+  const platform = detectPlatform();
+  if (platform) {
+    document.querySelectorAll<HTMLElement>('[data-download-cta]').forEach((cta) => {
+      const label = cta.querySelector<HTMLElement>('[data-download-label]');
+      const text = cta.dataset[`label${platform[0].toUpperCase()}${platform.slice(1)}`];
+      if (label && text) label.textContent = text;
+    });
+  }
+</script>

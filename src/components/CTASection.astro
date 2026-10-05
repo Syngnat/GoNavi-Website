@@ -1,32 +1,71 @@
 ---
+import type { Locale } from '../lib/i18n';
+import { GITHUB_URL, withLocale } from '../lib/i18n';
+
 interface Props {
-  eyebrow: string;
-  title: string;
-  description: string;
-  primary: string;
-  secondary: string;
-  primaryHref: string;
-  secondaryHref: string;
-  note?: string;
+  locale: Locale;
+  data: {
+    title: string;
+    description: string;
+    platforms: { id: 'windows' | 'macos' | 'linux'; name: string; note: string }[];
+  };
 }
 
-const { eyebrow, title, description, primary, secondary, primaryHref, secondaryHref, note } = Astro.props;
+const { locale, data } = Astro.props;
+const isZh = locale === 'zh';
+const copy = {
+  yours: isZh ? '你的系统' : 'Your system',
+  platforms: isZh ? '按平台下载' : 'Download by platform',
+  quickStart: isZh ? '快速开始' : 'Quick start',
+  source: isZh ? '查看源码' : 'View source',
+};
 ---
-<section class="home-section-wrap home-section-wrap--compact">
+<section class="section section--tight">
   <div class="site-shell__inner">
-    <div class="cta-section">
-      <div class="cta-section__content">
-        <p class="section-eyebrow section-eyebrow--onColor">{eyebrow}</p>
-        <h2 class="cta-section__title">{title}</h2>
-        <p class="cta-section__desc">{description}</p>
-
-        <div class="cta-section__actions">
-          <a class="cta-btn cta-btn--light" href={primaryHref}>{primary}</a>
-          <a class="cta-btn cta-btn--outline" href={secondaryHref} target="_blank" rel="noreferrer">{secondary}</a>
-        </div>
-
-        {note && <p class="cta-section__note">{note}</p>}
+    <div class="tile cta">
+      <div class="cta__copy">
+        <h2 class="cta__title">{data.title}</h2>
+        <p class="cta__desc">{data.description}</p>
+        <p class="cta__links">
+          <a href={withLocale(locale, '/docs/quick-start')}>{copy.quickStart}</a>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer">{copy.source}</a>
+        </p>
       </div>
+
+      <ul class="cta__platforms" aria-label={copy.platforms}>
+        {data.platforms.map((platform) => (
+          <li>
+            <a class="cta__platform" href={withLocale(locale, '/download')} data-cta-platform={platform.id}>
+              <span class="cta__platform-name">{platform.name}</span>
+              <span class="cta__platform-note">{platform.note}</span>
+              <span class="cta__platform-badge" hidden data-cta-platform-badge>{copy.yours}</span>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" />
+              </svg>
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   </div>
 </section>
+
+<script>
+  function currentPlatform(): string | null {
+    const ua = navigator.userAgent;
+    if (/android|iphone|ipad|ipod/i.test(ua)) return null;
+    if (/windows/i.test(ua)) return 'windows';
+    if (/mac(os)?|darwin/i.test(ua)) return 'macos';
+    if (/linux|x11/i.test(ua)) return 'linux';
+    return null;
+  }
+
+  const platform = currentPlatform();
+  if (platform) {
+    document.querySelectorAll<HTMLElement>(`[data-cta-platform="${platform}"]`).forEach((link) => {
+      link.setAttribute('data-current', '');
+      const badge = link.querySelector<HTMLElement>('[data-cta-platform-badge]');
+      if (badge) badge.hidden = false;
+    });
+  }
+</script>

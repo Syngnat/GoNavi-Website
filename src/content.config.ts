@@ -1,22 +1,78 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+const sectionHeading = z.object({ kicker: z.string(), title: z.string(), description: z.string() });
+const link = z.object({ label: z.string(), href: z.string() });
+
 const site = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/site' }),
   schema: z.object({
+    /** Meta title and description; the visible headline lives in `hero`. */
     title: z.string(),
-    eyebrow: z.string(),
     description: z.string(),
-    primaryCta: z.object({ label: z.string(), href: z.string() }),
-    secondaryCta: z.object({ label: z.string(), href: z.string() }),
-    highlights: z.array(z.string()),
-    features: z.array(z.object({ title: z.string(), description: z.string(), icon: z.enum(['native', 'multi', 'flow', 'team']) })),
-    screenshots: z.array(z.object({ badge: z.string(), title: z.string(), description: z.string(), image: z.string() })),
-    screenshotsHeading: z.object({ eyebrow: z.string(), title: z.string(), description: z.string() }),
-    featuresHeading: z.object({ eyebrow: z.string(), title: z.string(), description: z.string() }),
-    databases: z.array(z.object({ name: z.string(), kind: z.string(), status: z.enum(['primary', 'supported']), detail: z.string() })),
-    databasesHeading: z.object({ eyebrow: z.string(), title: z.string(), description: z.string() }),
-    cta: z.object({ title: z.string(), description: z.string(), note: z.string(), primary: z.string(), secondary: z.string() }),
+    hero: z.object({
+      /** One entry per line of the headline. */
+      headline: z.array(z.string()),
+      lede: z.string(),
+      download: z.string(),
+      facts: z.array(z.object({ label: z.string(), href: z.string().optional() })),
+    }),
+    tour: z.object({
+      label: z.string(),
+      note: z.string(),
+      shots: z.array(z.object({ id: z.string(), label: z.string(), caption: z.string(), image: z.string() })),
+    }),
+    scorecard: sectionHeading.extend({
+      sample: z.string(),
+      metrics: z.array(z.object({ label: z.string(), question: z.string(), value: z.string(), note: z.string() })),
+      compare: z.object({
+        caption: z.string(),
+        other: z.string(),
+        rows: z.array(z.object({ label: z.string(), other: z.string(), gonavi: z.string() })),
+      }),
+      method: z.string(),
+      methodLink: link,
+    }),
+    capabilities: sectionHeading.extend({
+      items: z.array(z.object({
+        id: z.string(),
+        title: z.string(),
+        summary: z.string(),
+        points: z.array(z.string()),
+        image: z.string(),
+        alt: z.string(),
+        /** Crop of the 1440×900 screenshot: magnification, then left/top offset in % of the image. */
+        zoom: z.number(),
+        x: z.number(),
+        y: z.number(),
+      })),
+    }),
+    agents: sectionHeading.extend({
+      points: z.array(z.string()),
+      clientsLabel: z.string(),
+      clients: z.array(z.string()),
+      flow: z.object({ label: z.string(), steps: z.array(z.string()) }),
+      snippets: z.array(z.object({ id: z.string(), label: z.string(), code: z.string() })),
+      link,
+    }),
+    sources: sectionHeading.extend({
+      categories: z.array(z.object({ id: z.string(), label: z.string() })),
+    }),
+    databases: z.array(z.object({
+      name: z.string(),
+      /** Must match an id in `sources.categories`. */
+      category: z.string(),
+      /** primary = built in, supported = optional driver agent. */
+      status: z.enum(['primary', 'supported']),
+      detail: z.string(),
+      /** Slug of a dedicated guide under /docs, when one exists. */
+      doc: z.string().optional(),
+    })),
+    cta: z.object({
+      title: z.string(),
+      description: z.string(),
+      platforms: z.array(z.object({ id: z.enum(['windows', 'macos', 'linux']), name: z.string(), note: z.string() })),
+    }),
   }),
 });
 

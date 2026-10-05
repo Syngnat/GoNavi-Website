@@ -1,18 +1,20 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+// After BaseLayout, so these rules come later in the cascade than the shared stylesheets.
+import '../../styles/download.css';
 import {
-  detectArch,
-  detectFormat,
+  desktopVariants,
   fetchReleases,
   formatSize,
   latestRelease,
-  pickPrimaryAsset,
-  scoreAsset,
+  recommendedVariant,
+  type DesktopArch,
+  type DesktopVariant,
   type NormalizedRelease,
-  type NormalizedReleaseAsset,
   type ReleasePlatform,
 } from '../../lib/releases';
 import type { Locale } from '../../lib/i18n';
+import { GITHUB_URL, withLocale } from '../../lib/i18n';
 
 export function getStaticPaths() {
   return [
@@ -26,264 +28,437 @@ interface Props {
 }
 
 const { locale } = Astro.props;
+const isZh = locale === 'zh';
+const RELEASES_URL = `${GITHUB_URL}/releases`;
 
-const copy = {
-  zh: {
-    eyebrow: '发布目录',
-    title: '下载 GoNavi',
-    description: '根据你的系统自动推荐合适的安装包，也可手动切换平台或架构。',
-    fetchError: 'GitHub Releases 拉取失败，当前展示本地兜底快照。',
-    empty: '暂时没有发布资产。',
-    download: '下载',
-    chooseVariant: '选择版本',
-    recommended: '推荐',
-    ready: '可下载',
-    pending: '待发布',
-    platforms: {
-      windows: { title: 'Windows', description: '适用于大多数桌面环境，提供安装包与便携版。' },
-      macos: { title: 'macOS', description: '同时支持 Apple Silicon 与 Intel 机型，推荐桌面安装包。' },
-      linux: { title: 'Linux', description: '适用于常见发行版，提供 AppImage、deb 与 rpm 包。' },
-    } as Record<ReleasePlatform, { title: string; description: string }>,
-  },
-  en: {
-    eyebrow: 'Release directory',
-    title: 'Download GoNavi',
-    description: 'Get the recommended installer for your system, or switch platform and architecture manually.',
-    fetchError: 'Failed to load GitHub Releases; showing the local fallback snapshot.',
-    empty: 'No release assets available yet.',
-    download: 'Download',
-    chooseVariant: 'Choose variant',
-    recommended: 'Recommended',
-    ready: 'Ready',
-    pending: 'Pending',
-    platforms: {
-      windows: { title: 'Windows', description: 'Built for most desktop setups, available as an installer or portable archive.' },
-      macos: { title: 'macOS', description: 'Supports Apple Silicon and Intel machines — desktop installer recommended.' },
-      linux: { title: 'Linux', description: 'Targets common distributions with AppImage, deb, and rpm packages.' },
-    } as Record<ReleasePlatform, { title: string; description: string }>,
-  },
-} as const;
+const t = isZh
+  ? {
+      eyebrow: '下载',
+      title: '下载 GoNavi',
+      description: '下面是适合这台电脑的安装包。其他系统和架构的版本在页面下方。',
+      fetchError: '暂时无法从 GitHub 获取安装包列表，请直接前往 GitHub Releases 下载。',
+      openReleases: '前往 GitHub Releases',
+      forYou: '适合你的系统',
+      platformTitle: (name: string) => `${name} 版`,
+      released: (date: string) => `${date} 发布`,
+      whatsNew: '查看更新内容',
+      download: '下载',
+      recommended: '推荐',
+      allPackages: (name: string) => `全部 ${name} 安装包`,
+      packages: (n: number) => `全部安装包（${n}）`,
+      others: '其他系统',
+      pick: '选择你的系统',
+      unknown: '没能识别你的系统，请在下方选择。',
+      mobile: 'GoNavi 是桌面应用，请在 Windows、macOS 或 Linux 电脑上下载。',
+      yourMac: '你的 Mac',
+      chipHint: '不确定是哪种芯片？点屏幕左上角的苹果菜单，选「关于本机」查看。',
+      cliTitle: '命令行版（CLI）',
+      cliCopy: '没有界面的 gonavi 命令，和桌面版共用连接配置，适合写脚本或在服务器上用。',
+      checksums: '校验文件',
+      history: '全部历史版本',
+      installGuide: '安装与更新指南',
+    }
+  : {
+      eyebrow: 'Download',
+      title: 'Download GoNavi',
+      description: 'Here is the right installer for this computer. Other systems and architectures are further down.',
+      fetchError: 'The installer list could not be loaded from GitHub. Download directly from GitHub Releases instead.',
+      openReleases: 'Open GitHub Releases',
+      forYou: 'For your system',
+      platformTitle: (name: string) => `GoNavi for ${name}`,
+      released: (date: string) => `Released ${date}`,
+      whatsNew: "See what's new",
+      download: 'Download',
+      recommended: 'Recommended',
+      allPackages: (name: string) => `All ${name} packages`,
+      packages: (n: number) => `All packages (${n})`,
+      others: 'Other systems',
+      pick: 'Choose your system',
+      unknown: "We couldn't tell which system you're on. Choose it below.",
+      mobile: 'GoNavi is a desktop app. Download it on a Windows, macOS, or Linux computer.',
+      yourMac: 'Your Mac',
+      chipHint: 'Not sure which chip you have? Open the Apple menu and choose About This Mac.',
+      cliTitle: 'Command line (CLI)',
+      cliCopy: 'The gonavi command, without the window. It shares connections with the desktop app, for scripts and servers.',
+      checksums: 'Checksums',
+      history: 'All releases',
+      installGuide: 'Installation guide',
+    };
 
-const t = copy[locale];
+/* ---- What each package is, in the visitor's words ---- */
+const kindLabel: Record<string, { label: string; note?: string }> = isZh
+  ? {
+      installer: { label: '安装版', note: '安装到电脑上，适合大多数人' },
+      'portable-exe': { label: '便携版 · 单文件', note: '一个 exe，不用安装，双击就能运行' },
+      'portable-zip': { label: '便携版 · 压缩包', note: '解压就能用，适合放在 U 盘或共享目录' },
+      webkit41: { label: 'WebKitGTK 4.1', note: 'Debian 13 / Ubuntu 24.04 及更新版本' },
+      webkit40: { label: 'WebKitGTK 4.0', note: 'Ubuntu 22.04 / Debian 12' },
+      tarball: { label: '通用压缩包' },
+    }
+  : {
+      installer: { label: 'Installer', note: 'Installs normally; right for most people' },
+      'portable-exe': { label: 'Portable · single file', note: 'One .exe, no install; just run it' },
+      'portable-zip': { label: 'Portable · archive', note: 'Unzip and run; handy on a USB drive or shared folder' },
+      webkit41: { label: 'WebKitGTK 4.1', note: 'Debian 13 / Ubuntu 24.04 and newer' },
+      webkit40: { label: 'WebKitGTK 4.0', note: 'Ubuntu 22.04 / Debian 12' },
+      tarball: { label: 'Generic archive' },
+    };
 
-let releases: NormalizedRelease[] = [];
-let fetchError: string | null = null;
+const chipLabel: Record<DesktopArch, { label: string; note: string }> = isZh
+  ? { arm64: { label: 'Apple 芯片', note: 'M1 – M4 系列' }, x64: { label: 'Intel 芯片', note: '较早的 Mac' } }
+  : { arm64: { label: 'Apple silicon', note: 'M1 – M4 series' }, x64: { label: 'Intel', note: 'Older Macs' } };
+
+const archLabel: Record<DesktopArch, string> = { x64: 'x64', arm64: 'ARM64' };
+
+function variantTitle(platform: ReleasePlatform, variant: DesktopVariant): string {
+  if (platform === 'macos') return chipLabel[variant.arch].label;
+  const kind = kindLabel[variant.kind]?.label ?? variant.asset.name;
+  return platform === 'linux' && variant.arch === 'arm64' ? 'ARM64' : `${archLabel[variant.arch]} · ${kind}`;
+}
+
+function variantNote(platform: ReleasePlatform, variant: DesktopVariant): string {
+  if (platform === 'macos') return chipLabel[variant.arch].note;
+  if (platform === 'linux' && variant.arch === 'arm64') return '';
+  return kindLabel[variant.kind]?.note ?? '';
+}
+
+/** Wording on a big download button: what you get, without repeating what the page already says. */
+function primaryTitle(platform: ReleasePlatform, variant: DesktopVariant): string {
+  if (platform === 'windows') {
+    const kind = kindLabel[variant.kind]?.label ?? '';
+    return isZh ? `下载${kind}` : `Download ${kind.toLowerCase()}`;
+  }
+  const build = platform === 'linux' && variant.arch === 'arm64' ? 'ARM64' : (kindLabel[variant.kind]?.label ?? '');
+  return isZh ? `下载 ${build} 版` : `Download ${build} build`;
+}
+
+function primaryMeta(platform: ReleasePlatform, variant: DesktopVariant): string {
+  const note = platform === 'linux' ? variantNote(platform, variant) : '';
+  return [archLabel[variant.arch], note, fileMeta(variant)].filter(Boolean).join(' · ');
+}
+
+function fileMeta(variant: DesktopVariant): string {
+  const extension = variant.asset.name.match(/\.(tar\.gz|msi|exe|zip|dmg|deb|rpm|appimage)$/i)?.[1] ?? '';
+  return [extension.toLowerCase(), formatSize(variant.asset.size)].filter(Boolean).join(' · ');
+}
+
+/* ---- Release data ---- */
+let release: NormalizedRelease | null = null;
 try {
-  releases = await fetchReleases();
-} catch (e) {
-  fetchError = e instanceof Error ? e.message : 'unknown';
+  release = latestRelease(await fetchReleases());
+} catch {
+  release = null;
 }
 
-const latest = latestRelease(releases);
+const releaseDate = (() => {
+  if (!release?.publishedAt) return null;
+  const date = new Date(release.publishedAt);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(isZh ? 'zh-CN' : 'en-US', { dateStyle: 'long' }).format(date);
+})();
 
-// Fallback snapshot if the fetch failed / returned nothing
-if (!latest) {
-  const fallback: NormalizedRelease = {
-    id: 0,
-    tag: 'v0.0.0',
-    name: 'v0.0.0',
-    url: null,
-    body: '',
-    publishedAt: null,
-    draft: false,
-    prerelease: false,
-    assets: [],
+const platformNames: Record<ReleasePlatform, string> = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };
+const helpLinks: Record<ReleasePlatform, { text: string; link: string }> = isZh
+  ? {
+      windows: { text: '需要 Microsoft Edge WebView2 运行时，Windows 10 / 11 一般已自带。打开后白屏或闪退？', link: '查看解决办法' },
+      macos: { text: '首次打开时被系统拦截？', link: '查看处理方法' },
+      linux: { text: '需要 WebKitGTK 运行库：4.1 版适用于 Debian 13 / Ubuntu 24.04 及更新版本，4.0 版适用于 Ubuntu 22.04 / Debian 12。', link: '安装依赖' },
+    }
+  : {
+      windows: { text: 'Requires the Microsoft Edge WebView2 runtime, which Windows 10 and 11 usually include. Blank window or crash on launch?', link: 'See the fix' },
+      macos: { text: 'Blocked by macOS the first time you open it?', link: 'See what to do' },
+      linux: { text: 'Requires WebKitGTK: the 4.1 build is for Debian 13 / Ubuntu 24.04 and newer, the 4.0 build for Ubuntu 22.04 / Debian 12.', link: 'Install the dependencies' },
+    };
+
+const platforms = (['windows', 'macos', 'linux'] as ReleasePlatform[]).map((id) => {
+  const variants = release ? desktopVariants(release.assets, id) : [];
+  const picks: Record<DesktopArch, DesktopVariant | null> = {
+    x64: recommendedVariant(variants, 'x64'),
+    arm64: recommendedVariant(variants, 'arm64'),
   };
-  releases = [fallback];
-  if (!fetchError) fetchError = 'no-data';
-}
+  // Marks which rows are the pick for which architecture, e.g. data-rec="x64".
+  const recFor = (variant: DesktopVariant) =>
+    (Object.keys(picks) as DesktopArch[]).filter((arch) => picks[arch] === variant).join(' ');
+  return { id, name: platformNames[id], variants, picks, recFor, help: helpLinks[id] };
+});
 
-const current = latestRelease(releases)!;
-const allPlatforms: ReleasePlatform[] = ['windows', 'macos', 'linux'];
+const cliAssets = release
+  ? release.assets
+      .filter((asset) => asset.cli)
+      .map((asset) => ({
+        asset,
+        platform: asset.platform as ReleasePlatform,
+        arch: (/arm64|aarch64/i.test(asset.name) ? 'arm64' : 'x64') as DesktopArch,
+      }))
+      .filter((item) => item.platform in platformNames)
+      .sort((l, r) => ['windows', 'macos', 'linux'].indexOf(l.platform) - ['windows', 'macos', 'linux'].indexOf(r.platform)
+        // Newer Macs are Apple silicon, so ARM comes first there; x64 first elsewhere.
+        || (l.arch === r.arch ? 0 : (l.arch === 'x64') !== (l.platform === 'macos') ? -1 : 1))
+  : [];
 
-// For SSR we don't know the user's platform; we emit them all and let the
-// client script reorder + pick the right arch.
-const formatDate = (s: string | null) => {
-  if (!s) return null;
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium' }).format(d);
-};
+const hasAssets = platforms.some((platform) => platform.variants.length > 0);
+const faqHref = withLocale(locale, '/docs/faq');
 ---
 <BaseLayout locale={locale} title={t.title} description={t.description} current="/download">
-  <div class="release-page site-shell__inner page-wrap">
-    <section class="release-page__intro content-panel">
+  <div class="site-shell__inner page-wrap dl" data-dl data-os="unknown" data-arch="x64">
+    <script is:inline>
+      // Runs while the page is still parsing, so the right system is featured on first paint.
+      (function (root) {
+        var ua = navigator.userAgent;
+        var os = 'unknown';
+        if (/android|iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) os = 'mobile';
+        else if (/windows/i.test(ua)) os = 'windows';
+        else if (/mac os|macintosh/i.test(ua)) os = 'macos';
+        else if (/linux|x11|cros/i.test(ua)) os = 'linux';
+        root.dataset.os = os;
+        // Browsers on Macs report "Intel" whatever the chip, so a Mac stays undecided unless proven otherwise.
+        root.dataset.arch = /arm64|aarch64/i.test(ua) ? 'arm64' : os === 'macos' ? 'unknown' : 'x64';
+      })(document.currentScript.parentElement);
+    </script>
+
+    <header class="content-panel dl__intro">
       <p class="content-panel__eyebrow">{t.eyebrow}</p>
       <h1 class="content-panel__title">{t.title}</h1>
       <p class="content-panel__copy">{t.description}</p>
-    </section>
+    </header>
 
-    {fetchError && (
-      <p class="release-page__status release-page__status--error">{t.fetchError}</p>
+    {!hasAssets && (
+      <div class="dl__error">
+        <p>{t.fetchError}</p>
+        <a class="btn btn--primary" href={RELEASES_URL} target="_blank" rel="noreferrer">{t.openReleases}</a>
+      </div>
     )}
 
-    <section class="release-page__section release-page__section--platforms">
-      <div class="platform-grid" data-platform-grid>
-        {allPlatforms.map((platform) => {
-          const candidates = current.assets
-            .filter((a) => a.platform === platform)
-            .sort((l, r) => scoreAsset(platform, r) - scoreAsset(platform, l) || l.name.localeCompare(r.name));
-          const primary = pickPrimaryAsset(current.assets, platform);
-          return (
-            <article class="platform-card" data-platform-card data-platform={platform}>
-              <div class="platform-card__header">
-                <p class="platform-card__platform">{t.platforms[platform].title}</p>
-                <div class="platform-card__badges">
-                  <span class="platform-card__badge--recommended" data-recommended-badge hidden>
-                    {t.recommended}
-                  </span>
-                  {primary ? (
-                    <span class="platform-card__status platform-card__status--ready">{t.ready}</span>
-                  ) : (
-                    <span class="platform-card__status">{t.pending}</span>
-                  )}
-                </div>
-              </div>
+    {hasAssets && (
+      <>
+        <p class="dl__notice dl__notice--unknown" role="status">{t.unknown}</p>
+        <p class="dl__notice dl__notice--mobile" role="status">{t.mobile}</p>
 
-              <p class="platform-card__description">{t.platforms[platform].description}</p>
+        {platforms.filter((platform) => platform.variants.length > 0).map((platform) => (
+          <section class="tile dl-hero" data-os-panel={platform.id} aria-labelledby={`dl-hero-${platform.id}`}>
+            <div class="dl-hero__main">
+              <p class="dl-hero__label">{t.forYou}</p>
+              <h2 class="dl-hero__title" id={`dl-hero-${platform.id}`}>{t.platformTitle(platform.name)}</h2>
+              {release && (
+                <p class="dl-hero__version">
+                  <span class="dl-hero__tag">{release.tag}</span>
+                  {releaseDate && <span>{t.released(releaseDate)}</span>}
+                  <a href={withLocale(locale, '/changelog')}>{t.whatsNew}</a>
+                </p>
+              )}
 
-              {primary ? (
-                <div class="platform-card__asset">
-                  {candidates.length > 1 ? (
-                    <label class="platform-card__picker">
-                      <span class="platform-card__picker-label">{t.chooseVariant}</span>
-                      <select class="platform-card__select" data-asset-picker>
-                        {candidates.map((a) => {
-                          const arch = detectArch(a.name);
-                          const format = detectFormat(a.name);
-                          const suffix = [format, arch].filter(Boolean).join(' · ');
-                          const shortLabel = a.name.replace(/^GoNavi[-_]/i, '').replace(/\.(dmg|msi|exe|zip|tar\.gz|tgz|deb|rpm|AppImage)$/i, '');
-                          return (
-                            <option
-                              value={a.url}
-                              data-arch={arch ?? ''}
-                              data-name={a.name}
-                              data-size={a.size != null ? formatSize(a.size) : ''}
-                              data-updated={a.updatedAt ? formatDate(a.updatedAt) ?? '' : ''}
-                              selected={primary && a.url === primary.url}
-                            >
-                              {shortLabel}{suffix ? ` (${suffix})` : ''}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    </label>
-                  ) : null}
-
-                  <div class="platform-card__asset-info">
-                    <span class="platform-card__asset-meta" data-asset-meta>
-                      {(() => {
-                        const arch = detectArch(primary.name);
-                        const format = detectFormat(primary.name);
-                        const parts: string[] = [];
-                        if (format) parts.push(format);
-                        if (arch) parts.push(arch);
-                        const size = formatSize(primary.size);
-                        if (size) parts.push(size);
-                        const updated = formatDate(primary.updatedAt);
-                        if (updated) parts.push(updated);
-                        return parts.join(' · ');
-                      })()}
-                    </span>
-                  </div>
-
-                  <a class="platform-card__action platform-card__action--primary" href={primary.url} rel="noreferrer" data-download-link data-download-platform={platform}>
-                    {t.download}
-                  </a>
+              {platform.id === 'macos' ? (
+                <div class="dl-chips">
+                  {(['arm64', 'x64'] as DesktopArch[]).map((arch) => platform.picks[arch] && (
+                    <a
+                      class="dl-chip"
+                      data-chip={arch}
+                      href={platform.picks[arch]!.asset.url}
+                      data-download-link
+                      data-download-platform={platform.id}
+                      data-file={platform.picks[arch]!.asset.name}
+                    >
+                      <span class="dl-chip__head">
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" />
+                        </svg>
+                        {chipLabel[arch].label}
+                        <span class="dl-chip__tag">{t.yourMac}</span>
+                      </span>
+                      <span class="dl-chip__meta">{chipLabel[arch].note} · {fileMeta(platform.picks[arch]!)}</span>
+                    </a>
+                  ))}
                 </div>
               ) : (
-                <p class="platform-card__missing">{t.empty}</p>
+                <div class="dl-hero__actions">
+                  {(['x64', 'arm64'] as DesktopArch[]).map((arch) => platform.picks[arch] && (
+                    <a
+                      class="dl-primary"
+                      data-arch-only={arch}
+                      href={platform.picks[arch]!.asset.url}
+                      data-download-link
+                      data-download-platform={platform.id}
+                      data-file={platform.picks[arch]!.asset.name}
+                    >
+                      <span class="dl-primary__head">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" />
+                        </svg>
+                        {primaryTitle(platform.id, platform.picks[arch]!)}
+                      </span>
+                      <span class="dl-primary__meta">{primaryMeta(platform.id, platform.picks[arch]!)}</span>
+                    </a>
+                  ))}
+                </div>
               )}
-            </article>
-          );
-        })}
-      </div>
-    </section>
+
+              {platform.id === 'macos' && <p class="dl-hero__hint">{t.chipHint}</p>}
+              <p class="dl-hero__hint">
+                {platform.help.text} <a href={faqHref}>{platform.help.link}</a>
+              </p>
+            </div>
+
+            <div class="dl-hero__list">
+              <p class="dl-hero__list-title">{t.allPackages(platform.name)}</p>
+              <ul class="dl-rows">
+                {platform.variants.map((variant) => (
+                  <li class="dl-row" data-rec={platform.recFor(variant) || undefined}>
+                    <span class="dl-row__name">
+                      {variantTitle(platform.id, variant)}
+                      <span class="dl-row__badge">{t.recommended}</span>
+                    </span>
+                    {variantNote(platform.id, variant) && <span class="dl-row__note">{variantNote(platform.id, variant)}</span>}
+                    <span class="dl-row__meta">{fileMeta(variant)}</span>
+                    <a
+                      class="dl-row__link"
+                      href={variant.asset.url}
+                      data-download-link
+                      data-download-platform={platform.id}
+                      data-file={variant.asset.name}
+                      aria-label={`${t.download} ${platform.name} ${variantTitle(platform.id, variant)}`}
+                    >
+                      {t.download}
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" />
+                      </svg>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        ))}
+
+        <section class="dl-others" aria-labelledby="dl-others-title">
+          <h2 class="dl-others__title" id="dl-others-title">
+            <span class="dl-others__title-known">{t.others}</span>
+            <span class="dl-others__title-pick">{t.pick}</span>
+          </h2>
+          <div class="dl-others__grid">
+            {platforms.filter((platform) => platform.variants.length > 0).map((platform) => {
+              const main = platform.picks.x64 ?? platform.picks.arm64!;
+              const chips = (['arm64', 'x64'] as DesktopArch[]).filter((arch) => platform.picks[arch]);
+              return (
+                <article class="dl-card" data-os-card={platform.id}>
+                  <h3 class="dl-card__name">{platform.name}</h3>
+                  {platform.id === 'macos' ? (
+                    <>
+                      <div class="dl-card__chips">
+                        {chips.map((arch) => (
+                          <a
+                            class="btn btn--secondary"
+                            href={platform.picks[arch]!.asset.url}
+                            data-download-link
+                            data-download-platform={platform.id}
+                            data-file={platform.picks[arch]!.asset.name}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" />
+                            </svg>
+                            {chipLabel[arch].label}
+                          </a>
+                        ))}
+                      </div>
+                      <p class="dl-card__meta">{t.chipHint}</p>
+                    </>
+                  ) : (
+                    <>
+                      <a
+                        class="btn btn--secondary dl-card__main"
+                        href={main.asset.url}
+                        data-download-link
+                        data-download-platform={platform.id}
+                        data-file={main.asset.name}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M10 3v9.5M6 9l4 4 4-4M4 16.5h12" />
+                        </svg>
+                        {primaryTitle(platform.id, main)}
+                      </a>
+                      <p class="dl-card__meta">{primaryMeta(platform.id, main)}</p>
+                    </>
+                  )}
+                  <details class="dl-card__more">
+                    <summary>{t.packages(platform.variants.length)}</summary>
+                    <ul class="dl-rows dl-rows--compact">
+                      {platform.variants.map((variant) => (
+                        <li class="dl-row">
+                          <span class="dl-row__name">{variantTitle(platform.id, variant)}</span>
+                          {variantNote(platform.id, variant) && <span class="dl-row__note">{variantNote(platform.id, variant)}</span>}
+                          <span class="dl-row__meta">{fileMeta(variant)}</span>
+                          <a
+                            class="dl-row__link"
+                            href={variant.asset.url}
+                            data-download-link
+                            data-download-platform={platform.id}
+                            data-file={variant.asset.name}
+                            aria-label={`${t.download} ${platform.name} ${variantTitle(platform.id, variant)}`}
+                          >
+                            {t.download}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section class="dl-extra">
+          {cliAssets.length > 0 && (
+            <div class="dl-extra__cli">
+              <h2 class="dl-extra__title">{t.cliTitle}</h2>
+              <p class="dl-extra__copy">{t.cliCopy}</p>
+              <ul class="dl-extra__files">
+                {cliAssets.map(({ asset, platform, arch }) => (
+                  <li>
+                    <a href={asset.url} data-download-link data-download-platform={`cli-${platform}`} data-file={asset.name}>
+                      {platformNames[platform]} · {platform === 'macos' ? chipLabel[arch].label : archLabel[arch]}
+                    </a>
+                    <span>{formatSize(asset.size)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <ul class="dl-extra__links">
+            {release?.checksums.map((file) => (
+              <li><a href={file.url}>{t.checksums} · <code>{file.name}</code></a></li>
+            ))}
+            <li><a href={RELEASES_URL} target="_blank" rel="noreferrer">{t.history}</a></li>
+            <li><a href={withLocale(locale, '/docs/install')}>{t.installGuide}</a></li>
+          </ul>
+        </section>
+      </>
+    )}
   </div>
 
-  <script is:inline define:vars={{ locale }}>
-    (function () {
-      function detectPlatform() {
-        const ua = navigator.userAgent;
-        if (/windows/i.test(ua)) return 'windows';
-        if (/mac(os)?|darwin|cfr/i.test(ua)) return 'macos';
-        if (/linux|x11|android/i.test(ua)) return 'linux';
-        return null;
-      }
-      function detectArchFromUA() {
-        const ua = navigator.userAgent;
-        if (/arm64|aarch64/i.test(ua)) return 'arm64';
-        if (/wow64|win64|x64|x86_64/i.test(ua)) return 'x64';
-        return null;
-      }
+  <script>
+    import { trackDownload } from '../../lib/analytics-client';
 
-      const userPlatform = detectPlatform();
-      const userArch = detectArchFromUA();
-      const grid = document.querySelector('[data-platform-grid]');
-      if (!grid) return;
-      const cards = Array.from(grid.querySelectorAll('[data-platform-card]'));
+    const root = document.querySelector<HTMLElement>('[data-dl]');
 
-      // Reorder so user's platform comes first and mark it as recommended
-      if (userPlatform) {
-        const target = cards.find((c) => c.dataset.platform === userPlatform);
-        if (target) {
-          grid.prepend(target);
-          target.classList.add('platform-card--recommended');
-          const badge = target.querySelector('[data-recommended-badge]');
-          if (badge) badge.removeAttribute('hidden');
-        }
-      }
+    // Chromium browsers can say what the CPU really is (an ARM Windows PC still sends an x64 user agent).
+    type ArchHints = { architecture?: string; bitness?: string };
+    const uaData = (navigator as Navigator & {
+      userAgentData?: { getHighEntropyValues(hints: string[]): Promise<ArchHints> };
+    }).userAgentData;
 
-      // For each card, if user arch matches an asset, preselect it
-      cards.forEach((card) => {
-        const select = card.querySelector('[data-asset-picker]');
-        const link = card.querySelector('[data-download-link]');
-        const meta = card.querySelector('[data-asset-meta]');
-        if (!select || !link) return;
+    if (root && uaData && root.dataset.os !== 'mobile' && root.dataset.os !== 'unknown') {
+      uaData.getHighEntropyValues(['architecture', 'bitness'])
+        .then(({ architecture }) => {
+          if (architecture === 'arm') root.dataset.arch = 'arm64';
+          else if (architecture === 'x86') root.dataset.arch = 'x64';
+        })
+        .catch(() => {});
+    }
 
-        function syncMeta(option) {
-          if (!meta || !option) return;
-          const parts = [];
-          const name = option.dataset.name || '';
-          const arch = option.dataset.arch || '';
-          // Extract format from name (e.g. ".dmg", ".msi")
-          const m = name.match(/\.(dmg|msi|exe|pkg|deb|rpm|appimage|tar\.gz|tgz)$/i);
-          if (m) parts.push(m[1].toLowerCase());
-          if (arch) parts.push(arch);
-          if (option.dataset.size) parts.push(option.dataset.size);
-          if (option.dataset.updated) parts.push(option.dataset.updated);
-          meta.textContent = parts.join(' · ');
-        }
-
-        // Preselect based on user arch if available
-        if (userArch) {
-          const options = Array.from(select.options);
-          const match = options.find((o) => (o.dataset.arch || '') === userArch);
-          if (match) {
-            select.value = match.value;
-            link.href = match.value;
-            syncMeta(match);
-          }
-        }
-
-        select.addEventListener('change', () => {
-          const opt = select.options[select.selectedIndex];
-          link.href = opt.value;
-          syncMeta(opt);
-        });
-
-        // 下载点击埋点：记录真实触发下载的动作（含平台+文件名）
-        link.addEventListener('click', function () {
-          try {
-            const uid = localStorage.getItem('gonavi_uid_v1');
-            const name = (select.options[select.selectedIndex] || {}).dataset && select.options[select.selectedIndex].dataset.name;
-            const file = encodeURIComponent(link.href.split('/').pop() || '');
-            const pl = link.getAttribute('data-download-platform') || '';
-            const q = 'uid=' + encodeURIComponent(uid || '') + '&act=download&p=' + location.pathname + '&file=' + file + '&plat=' + pl;
-            navigator.sendBeacon('/__stats?' + q);
-          } catch (e) {}
-        });
+    document.querySelectorAll<HTMLAnchorElement>('[data-download-link]').forEach((link) => {
+      link.addEventListener('click', () => {
+        trackDownload(link.dataset.file ?? link.href.split('/').pop() ?? '', link.dataset.downloadPlatform ?? '');
       });
-    })();
+    });
   </script>
 </BaseLayout>

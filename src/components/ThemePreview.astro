@@ -1,0 +1,134 @@
+---
+/*
+ * Temporary palette picker for choosing the site's colour theme. BaseLayout only
+ * renders it in `astro dev`, so it never reaches a production build. Remove it
+ * (and the candidate blocks in tokens.css) once a palette is chosen.
+ */
+const themes = [
+  { id: 'default', name: '当前 · 绿', note: '石墨面板 + 绿色', colors: ['#fafaf8', '#2f2d32', '#15803d'] },
+  { id: 'beacon', name: '航标', note: '海军蓝 + 信号橙', colors: ['#f6f7f9', '#13233d', '#f26b1d'] },
+  { id: 'signal', name: '路牌', note: '钴蓝 + 路牌黄', colors: ['#f7f8fa', '#1f3399', '#ffc52e'] },
+  { id: 'chart', name: '海图', note: '深海青 + 航标品红', colors: ['#f4f7f7', '#0f3038', '#c0187a'] },
+  { id: 'dark', name: '夜航', note: '深色 · 石墨 + 冷光蓝', colors: ['#141316', '#26252b', '#8b9cff'] },
+];
+---
+<div class="theme-preview" data-theme-preview>
+  <p class="theme-preview__label">配色预览 · 仅本地可见</p>
+  <div class="theme-preview__options" role="radiogroup" aria-label="配色">
+    {themes.map((theme) => (
+      <button type="button" role="radio" aria-checked="false" class="theme-preview__option" data-theme-option={theme.id}>
+        <span class="theme-preview__swatch" aria-hidden="true">
+          {theme.colors.map((color) => <span style={`background:${color}`}></span>)}
+        </span>
+        <span class="theme-preview__text">
+          <span class="theme-preview__name">{theme.name}</span>
+          <span class="theme-preview__note">{theme.note}</span>
+        </span>
+      </button>
+    ))}
+  </div>
+</div>
+
+<style>
+  .theme-preview {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 2000;
+    width: 214px;
+    padding: 10px;
+    border: 1px solid var(--separator-hover);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .theme-preview__label {
+    padding: 0 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+  }
+
+  .theme-preview__options {
+    display: grid;
+    gap: 2px;
+  }
+
+  .theme-preview__option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px;
+    border-radius: 8px;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .theme-preview__option:hover {
+    background: var(--fill-f1);
+  }
+
+  .theme-preview__option[aria-checked='true'] {
+    background: var(--fill-f2);
+    font-weight: 700;
+  }
+
+  .theme-preview__text {
+    display: grid;
+    line-height: 1.3;
+  }
+
+  .theme-preview__note {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+  }
+
+  .theme-preview__swatch {
+    display: inline-flex;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 1px solid var(--separator-hover);
+    border-radius: 6px;
+  }
+
+  .theme-preview__swatch span {
+    width: 10px;
+    height: 26px;
+  }
+</style>
+
+<script>
+  const STORAGE_KEY = 'gonavi-theme-preview';
+  const root = document.documentElement;
+
+  const sync = () => {
+    const known = new Set(Array.from(document.querySelectorAll<HTMLElement>('[data-theme-option]'), (o) => o.dataset.themeOption));
+    // A palette saved from an earlier round of candidates may no longer exist.
+    if (root.dataset.theme && !known.has(root.dataset.theme)) delete root.dataset.theme;
+    const current = root.dataset.theme ?? 'default';
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-option]').forEach((option) => {
+      option.setAttribute('aria-checked', String(option.dataset.themeOption === current));
+    });
+  };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-option]').forEach((option) => {
+    option.addEventListener('click', () => {
+      const id = option.dataset.themeOption ?? 'default';
+      if (id === 'default') delete root.dataset.theme;
+      else root.dataset.theme = id;
+      try {
+        localStorage.setItem(STORAGE_KEY, id);
+      } catch {
+        // Private windows may refuse storage; the choice still applies to this page.
+      }
+      sync();
+    });
+  });
+
+  sync();
+</script>

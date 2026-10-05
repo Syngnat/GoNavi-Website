@@ -20,7 +20,9 @@ export default defineConfig({
   ],
   markdown: {
     shikiConfig: {
-      theme: 'github-light',
+      // Both palettes are emitted as CSS variables; pages.css decides which one shows.
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false,
       wrap: true,
     },
   },

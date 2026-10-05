@@ -1,3 +1,12 @@
+/* Overpass ships its middle dot (U+00B7) with zero advance width, so "A · B" collapses
+   onto one side. Route that single character to a system face instead. */
+@font-face {
+  font-family: 'GoNavi Dot';
+  src: local('Segoe UI'), local('Helvetica Neue'), local('Helvetica'), local('Arial'), local('Roboto'),
+    local('Noto Sans'), local('DejaVu Sans');
+  unicode-range: U+00B7;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,24 +15,25 @@
 
 html {
   min-height: 100%;
-  background: var(--bg-primary);
+  background: var(--paper);
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 html,
-body,
-#root {
+body {
   min-height: 100%;
 }
 
 body {
   font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 24px;
+  line-height: 1.6;
   color: var(--text-primary);
-  background: var(--bg-primary);
+  background: var(--paper);
 }
 
 a {
@@ -40,22 +50,36 @@ svg {
 
 button {
   font-family: inherit;
+  color: inherit;
   cursor: pointer;
   border: none;
   background: none;
 }
 
-/* ===== Focus States ===== */
-a:focus-visible,
-button:focus-visible {
-  outline: 2px solid var(--accent-blue);
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+  /* Commands and SQL are read character by character: no "fi" or "--" ligatures. */
+  font-variant-ligatures: none;
+}
+
+/* `hidden` has to win over component display rules. */
+[hidden] {
+  display: none !important;
+}
+
+/* ===== Focus ===== */
+:focus-visible {
+  outline: 2px solid var(--accent-text);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
 /* ===== Selection ===== */
 ::selection {
-  background: rgba(10, 108, 255, 0.18);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: inherit;
 }
 
@@ -70,16 +94,32 @@ button:focus-visible {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--fill-f2);
+  background: var(--fill-f3);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--fill-f3);
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
-/* ===== Reduced Motion ===== */
+/* ===== Utilities ===== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
